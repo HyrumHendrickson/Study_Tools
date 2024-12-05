@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector Field Path Tracing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f9;
+      color: #333;
+    }
+
+    header {
+      background: #0077cc;
+      color: #fff;
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .input-container {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    input[type="text"] {
+      width: 150px;
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    input[type="range"] {
+      margin: 0 10px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: #0077cc;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #005fa3;
+    }
+
+    canvas {
+      border: 1px solid #333;
+      background: #fff;
+      margin-top: 1rem;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background: #0077cc;
+      color: #fff;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vector Field Path Tracing</h1>
+  </header>
+  <main>
+    <div class="input-container">
+      <label for="fx">Enter \( f(x, y) \):</label>
+      <input type="text" id="fx" placeholder="e.g., -y" />
+      <label for="gy">Enter \( g(x, y) \):</label>
+      <input type="text" id="gy" placeholder="e.g., x" />
+    </div>
+    <div class="input-container">
+      <label for="density">Density:</label>
+      <input type="range" id="density" min="5" max="75" value="10" />
+      <span id="density-value">10</span>
+      <label for="step-size">Step Size:</label>
+      <input type="range" id="step-size" min="0.005" max="0.5" step="0.01" value="0.1" />
+      <span id="step-size-value">0.1</span>
+      <label for="max-steps">Max Steps:</label>
+      <input type="range" id="max-steps" min="10" max="1000" value="200" />
+      <span id="max-steps-value">200</span>
+      <button id="plot-btn">Plot</button>
+    </div>
+    <canvas id="vector-canvas" width="800" height="600"></canvas>
+  </main>
+  <footer>
+    <p>Drag the point to trace its path through the vector field</p>
+  </footer>
+  <script>
+    const canvas = document.getElementById('vector-canvas');
+    const ctx = canvas.getContext('2d');
+    const originX = canvas.width / 2;
+    const originY = canvas.height / 2;
+    const scale = 40; // Pixels per unit
+    const densityInput = document.getElementById('density');
+    const densityValue = document.getElementById('density-value');
+    const stepSizeInput = document.getElementById('step-size');
+    const stepSizeValue = document.getElementById('step-size-value');
+    const maxStepsInput = document.getElementById('max-steps');
+    const maxStepsValue = document.getElementById('max-steps-value');
+
+    let currentVectorField = null;
+    let dragPoint = null;
+    let isMouseDown = false;
+
+    function canvasToMathCoords(x, y) {
+      return {
+        x: (x - originX) / scale,
+        y: (originY - y) / scale
+      };
+    }
+
+    function mathToCanvasCoords(x, y) {
+      return {
+        x: originX + x * scale,
+        y: originY - y * scale
+      };
+    }
+
+    function getMagnitudeColor(magnitude, minMagnitude, maxMagnitude) {
+      if (minMagnitude === maxMagnitude) {
+        return 'rgb(0, 0, 255)';
+      }
+
+      const normalizedMagnitude = (magnitude - minMagnitude) / (maxMagnitude - minMagnitude);
+      
+      const r = Math.round(normalizedMagnitude * 255);
+      const g = Math.round((1 - normalizedMagnitude) * 200);
+      const b = Math.round((1 - normalizedMagnitude) * 255);
+      
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function plotVectorField(fxStr, gyStr, density) {
+      try {
+        const f = math.compile(fxStr);
+        const g = math.compile(gyStr);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAxes();
+
+        const step = 20 / density;
+        let minMagnitude = Infinity;
+        let maxMagnitude = -Infinity;
+        const vectors = [];
+
+        // First pass: find min and max magnitude
+        for (let x = -10; x <= 10; x += step) {
+          for (let y = -7; y <= 7; y += step) {
+            const fx = f.evaluate({ x, y });
+            const gy = g.evaluate({ x, y });
+            const magnitude = Math.sqrt(fx * fx + gy * gy);
+            
+            minMagnitude = Math.min(minMagnitude, magnitude);
+            maxMagnitude = Math.max(maxMagnitude, magnitude);
+            
+            vectors.push({ x, y, fx, gy, magnitude });
+          }
+        }
+
+        // Store the vector field for later use
+        currentVectorField = {
+          f, 
+          g, 
+          minMagnitude, 
+          maxMagnitude
+        };
+
+        // Second pass: draw vectors with adaptive color-coded magnitude
+        vectors.forEach(({ x, y, fx, gy, magnitude }) => {
+          drawVector(x, y, fx, gy, step, magnitude, minMagnitude, maxMagnitude);
+        });
+
+      } catch (error) {
+        alert('Invalid equations. Please check your inputs.');
+      }
+    }
+
+    function drawAxes() {
+      ctx.beginPath();
+      ctx.moveTo(0, originY);
+      ctx.lineTo(canvas.width, originY); // X-axis
+      ctx.moveTo(originX, 0);
+      ctx.lineTo(originX, canvas.height); // Y-axis
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    function drawVector(x, y, fx, gy, step, magnitude, minMagnitude, maxMagnitude) {
+      const startX = originX + x * scale;
+      const startY = originY - y * scale;
+
+      if (magnitude === 0) return; // Skip zero-length vectors
+
+      const normFx = (fx / magnitude) * step * scale * 0.8;
+      const normGy = (gy / magnitude) * step * scale * 0.8;
+
+      const endX = startX + normFx;
+      const endY = startY - normGy;
+
+      const vectorColor = getMagnitudeColor(magnitude, minMagnitude, maxMagnitude);
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = vectorColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const arrowSize = 8;
+      const angle = Math.atan2(-normGy, normFx);
+
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(
+        endX - arrowSize * Math.cos(angle - Math.PI / 6),
+        endY - arrowSize * Math.sin(angle - Math.PI / 6)
+      );
+      ctx.lineTo(
+        endX - arrowSize * Math.cos(angle + Math.PI / 6),
+        endY - arrowSize * Math.sin(angle + Math.PI / 6)
+      );
+      ctx.closePath();
+      ctx.fillStyle = vectorColor;
+      ctx.fill();
+    }
+
+    function tracePointPath(startPoint, stepSize, maxSteps) {
+      if (!currentVectorField) return;
+
+      const path = [startPoint];
+      let currentPoint = {...startPoint};
+
+      for (let i = 0; i < maxSteps; i++) {
+        // Get the vector at the current point
+        const fx = currentVectorField.f.evaluate(currentPoint);
+        const gy = currentVectorField.g.evaluate(currentPoint);
+        
+        // Normalize the vector
+        const magnitude = Math.sqrt(fx * fx + gy * gy);
+        if (magnitude === 0) break;
+
+        // Move along the vector
+        currentPoint.x += (fx / magnitude) * stepSize;
+        currentPoint.y += (gy / magnitude) * stepSize;
+        
+        path.push({...currentPoint});
+      }
+
+      return path;
+    }
+
+    function drawPath(path) {
+      if (path.length < 2) return;
+
+      ctx.beginPath();
+      const start = mathToCanvasCoords(path[0].x, path[0].y);
+      ctx.moveTo(start.x, start.y);
+
+      for (let i = 1; i < path.length; i++) {
+        const point = mathToCanvasCoords(path[i].x, path[i].y);
+        ctx.lineTo(point.x, point.y);
+      }
+
+      ctx.strokeStyle = 'green';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Draw start and end points
+      const startPoint = mathToCanvasCoords(path[0].x, path[0].y);
+      const endPoint = mathToCanvasCoords(path[path.length-1].x, path[path.length-1].y);
+
+      ctx.beginPath();
+      ctx.arc(startPoint.x, startPoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(endPoint.x, endPoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
+
+    // Event listeners for dragging
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      dragPoint = canvasToMathCoords(x, y);
+      isMouseDown = true;
+
+      // Redraw the vector field and trace path
+      plotVectorField(
+        document.getElementById('fx').value, 
+        document.getElementById('gy').value, 
+        parseInt(densityInput.value, 10)
+      );
+      
+      const path = tracePointPath(
+        dragPoint, 
+        parseFloat(stepSizeInput.value), 
+        parseInt(maxStepsInput.value, 10)
+      );
+      drawPath(path);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isMouseDown || !currentVectorField) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      dragPoint = canvasToMathCoords(x, y);
+
+      // Redraw the vector field and trace path
+      plotVectorField(
+        document.getElementById('fx').value, 
+        document.getElementById('gy').value, 
+        parseInt(densityInput.value, 10)
+      );
+      
+      const path = tracePointPath(
+        dragPoint, 
+        parseFloat(stepSizeInput.value), 
+        parseInt(maxStepsInput.value, 10)
+      );
+      drawPath(path);
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isMouseDown = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      isMouseDown = false;
+    });
+
+    // Update the displayed input values
+    densityInput.addEventListener('input', () => {
+      densityValue.textContent = densityInput.value;
+    });
+
+    stepSizeInput.addEventListener('input', () => {
+      stepSizeValue.textContent = stepSizeInput.value;
+    });
+
+    maxStepsInput.addEventListener('input', () => {
+      maxStepsValue.textContent = maxStepsInput.value;
+    });
+
+    // Add event listener to the plot button
+    document.getElementById('plot-btn').addEventListener('click', () => {
+      const fxStr = document.getElementById('fx').value;
+      const gyStr = document.getElementById('gy').value;
+      const density = parseInt(densityInput.value, 10);
+      plotVectorField(fxStr, gyStr, density);
+    });
+
+    // Initial setup
+    drawAxes();
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</body>
+</html>
