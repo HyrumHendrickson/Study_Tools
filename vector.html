@@ -5,17 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vector Field Path Tracing</title>
   <style>
+    :root {
+      --primary-bg: #894e59;
+      --secondary-bg: #894e59;
+      --nav-bg: #66577d;
+      --hover-bg: #de5d74;
+      --content-bg: #5a5463;
+      --text-color: #e0e0e0;
+      --white: #ffffff;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f4f4f9;
-      color: #333;
+      background: var(--content-bg);
+      color: var(--text-color);
+    }
+
+    nav {
+      background: var(--nav-bg);
+      color: var(--white);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      font-weight: bold;
+      margin-right: 1rem;
+    }
+
+    nav a:hover {
+      color: var(--hover-bg);
     }
 
     header {
-      background: #0077cc;
-      color: #fff;
+      background: var(--primary-bg);
+      color: var(--white);
       text-align: center;
       padding: 1rem 0;
     }
@@ -37,32 +67,27 @@
       margin-right: 10px;
     }
 
-    input[type="text"] {
-      width: 150px;
+    input[type="text"], input[type="range"] {
       padding: 0.5rem;
       margin-right: 0.5rem;
     }
 
-    input[type="range"] {
-      margin: 0 10px;
-    }
-
     button {
       padding: 0.5rem 1rem;
-      background: #0077cc;
-      color: #fff;
+      background: var(--primary-bg);
+      color: var(--white);
       border: none;
       cursor: pointer;
       font-weight: bold;
     }
 
     button:hover {
-      background: #005fa3;
+      background: var(--hover-bg);
     }
 
     canvas {
-      border: 1px solid #333;
-      background: #fff;
+      border: 1px solid var(--text-color);
+      background: var(--white);
       margin-top: 1rem;
       cursor: grab;
     }
@@ -74,13 +99,21 @@
     footer {
       text-align: center;
       padding: 1rem;
-      background: #0077cc;
-      color: #fff;
+      background: var(--secondary-bg);
+      color: var(--white);
       margin-top: 2rem;
     }
   </style>
 </head>
 <body>
+  <nav>
+    <div>
+      <a href="index.html">Home</a>
+    </div>
+    <div>
+      <!-- Additional nav links can go here -->
+    </div>
+  </nav>
   <header>
     <h1>Vector Field Path Tracing</h1>
   </header>
@@ -108,6 +141,10 @@
   <footer>
     <p>Drag the point to trace its path through the vector field</p>
   </footer>
+
+
+  
+
   <script>
     const canvas = document.getElementById('vector-canvas');
     const ctx = canvas.getContext('2d');
