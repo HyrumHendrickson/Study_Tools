@@ -5,57 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vector Field Path Tracing</title>
   <link rel="icon" href="logo.jpg">
+
+
   <style>
-    :root {
-      --primary-bg: #894e59;
-      --secondary-bg: #894e59;
-      --nav-bg: #66577d;
-      --hover-bg: #de5d74;
-      --content-bg: #5a5463;
-      --text-color: #e0e0e0;
-      --white: #ffffff;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: var(--content-bg);
-      color: var(--text-color);
-    }
-
-    nav {
-      background: var(--nav-bg);
-      color: var(--white);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-    }
-
-    nav a {
-      color: var(--white);
-      text-decoration: none;
-      font-weight: bold;
-      margin-right: 1rem;
-    }
-
-    nav a:hover {
-      color: var(--hover-bg);
-    }
-
-    header {
-      background: var(--primary-bg);
-      color: var(--white);
-      text-align: center;
-      padding: 1rem 0;
-    }
-
     main {
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 1rem;
+    }
+    #title {
+      display: flex;
+    justify-content: center; /* Centers horizontally */
+    align-items: center; /* Centers vertically */
+    }
+    button:hover {
+      background: var(--hover-bg);
     }
 
     .input-container {
@@ -81,43 +46,41 @@
       cursor: pointer;
       font-weight: bold;
     }
-
-    button:hover {
-      background: var(--hover-bg);
-    }
-
     canvas {
       border: 1px solid var(--text-color);
       background: var(--white);
       margin-top: 1rem;
       cursor: grab;
+      margin-bottom: 100px;
     }
 
     canvas:active {
       cursor: grabbing;
     }
-
-    footer {
-      text-align: center;
-      padding: 1rem;
-      background: var(--secondary-bg);
-      color: var(--white);
-      margin-top: 2rem;
-    }
   </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
+    <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
+    <h1>Study Tools Compository</h1>
+</header>
+
+<nav>
+    
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="vector.html">Vector Calculator</a></li>
+        <li><a href="heatmap.html">Smoothing Heatmap</a></li>
+        <li><a href="lines.html">Linear Regression</a></li>
+        <li><a href=""></a></li>
+        <li><a href=""></a></li>
+    </ul>
+</nav>
+  <div id="title">
     <h1>Vector Field Path Tracing</h1>
-  </header>
-  <nav>
-    <div>
-      <a href="index.html">Home</a>
-    </div>
-    <div>
-      <!-- Additional nav links can go here -->
-    </div>
-  </nav>
+  </div>
+  
   <main>
     <div class="input-container">
       <label for="fx">Enter \( f(x, y) \):</label>
@@ -140,7 +103,7 @@
     <canvas id="vector-canvas" width="800" height="600"></canvas>
   </main>
   <footer>
-    <p>Drag the point to trace its path through the vector field</p>
+    <p>&copy; 2024 Study Tools Compository. All rights reserved.</p>
   </footer>
 
 

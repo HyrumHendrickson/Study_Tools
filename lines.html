@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Regression Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+            background-color: white;
+        }
+        .controls {
+            margin-top: 10px;
+            margin-bottom: 150px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
+        <h1>Study Tools Compository</h1>
+    </header>
+    <nav>
+        
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="vector.html">Vector Calculator</a></li>
+            <li><a href="heatmap.html">Smoothing Heatmap</a></li>
+            <li><a href="lines.html">Linear Regression</a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+        </ul>
+    </nav>
+    <h1>Find the Secret Line!</h1>
+    <p>Adjust the slope and intercept to match the hidden line.</p>
+    <canvas id="plotCanvas" width="500" height="500"></canvas>
+    <div class="controls">
+        <label for="slope">Slope:</label>
+        <input type="range" id="slope" min="-2" max="2" step="0.1" value="0">
+        <span id="slopeValue">0</span>
+        <br>
+        <label for="intercept">Intercept:</label>
+        <input type="range" id="intercept" min="-100" max="100" step="1" value="0">
+        <span id="interceptValue">0</span>
+        <br>
+        <label for="toggleSecret">Show Secret Line:</label>
+        <input type="checkbox" id="toggleSecret">
+        <br>
+        <label for="toggleRegression">Show Regression Line:</label>
+        <input type="checkbox" id="toggleRegression">
+        <br>
+        <button id="resetPointsButton">Reset Points</button>
+        <button id="resetSecretButton">New Random Secret Line</button>
+    </div>
+    <footer>
+        <p>&copy; 2024 Study Tools Compository. All rights reserved.</p>
+    </footer>
+    <script>
+        const canvas = document.getElementById('plotCanvas');
+        const ctx = canvas.getContext('2d');
+        const slopeSlider = document.getElementById('slope');
+        const slopeValue = document.getElementById('slopeValue');
+        const interceptSlider = document.getElementById('intercept');
+        const interceptValue = document.getElementById('interceptValue');
+        const toggleSecret = document.getElementById('toggleSecret');
+        const toggleRegression = document.getElementById('toggleRegression');
+        const resetPointsButton = document.getElementById('resetPointsButton');
+        const resetSecretButton = document.getElementById('resetSecretButton');
+        
+        let secretSlope = Math.random() * 2 - 1;
+        let secretIntercept = Math.random() * 50 - 25;
+        let points = [];
+        
+        function generatePoints() {
+            points = [];
+            for (let i = -20; i <= 20; i += 2) {
+                let noise = (Math.random() - 0.5) * 10;
+                points.push({ x: i, y: secretSlope * i + secretIntercept + noise });
+            }
+        }
+        
+        function calculateRegression() {
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            let n = points.length;
+            points.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+                sumXY += p.x * p.y;
+                sumXX += p.x * p.x;
+            });
+            let slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            let intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept };
+        }
+        
+        generatePoints();
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(1, -1);
+            
+            ctx.fillStyle = 'red';
+            points.forEach(point => {
+                ctx.beginPath();
+                ctx.arc(point.x * 10, point.y * 10, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.strokeStyle = 'blue';
+            ctx.beginPath();
+            ctx.moveTo(-200, slopeSlider.value * -20 * 10 + interceptSlider.value * 10);
+            ctx.lineTo(200, slopeSlider.value * 20 * 10 + interceptSlider.value * 10);
+            ctx.stroke();
+            
+            if (toggleSecret.checked) {
+                ctx.strokeStyle = 'green';
+                ctx.beginPath();
+                ctx.moveTo(-200, secretSlope * -20 * 10 + secretIntercept * 10);
+                ctx.lineTo(200, secretSlope * 20 * 10 + secretIntercept * 10);
+                ctx.stroke();
+            }
+            
+            if (toggleRegression.checked) {
+                const regression = calculateRegression();
+                ctx.strokeStyle = 'purple';
+                ctx.beginPath();
+                ctx.moveTo(-200, regression.slope * -20 * 10 + regression.intercept * 10);
+                ctx.lineTo(200, regression.slope * 20 * 10 + regression.intercept * 10);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+        
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left - canvas.width / 2) / 10;
+            const y = (canvas.height / 2 - (event.clientY - rect.top)) / 10;
+            points.push({ x, y });
+            draw();
+        });
+        
+        resetPointsButton.addEventListener('click', function () {
+            generatePoints();
+            draw();
+        });
+        
+        resetSecretButton.addEventListener('click', function () {
+            secretSlope = Math.random() * 2 - 1;
+            secretIntercept = Math.random() * 50 - 25;
+            generatePoints();
+            draw();
+        });
+        
+        slopeSlider.addEventListener('input', function () {
+            slopeValue.textContent = this.value;
+            draw();
+        });
+        
+        interceptSlider.addEventListener('input', function () {
+            interceptValue.textContent = this.value;
+            draw();
+        });
+        
+        toggleSecret.addEventListener('change', draw);
+        toggleRegression.addEventListener('change', draw);
+        
+        draw();
+    </script>
+</body>
+</html>
