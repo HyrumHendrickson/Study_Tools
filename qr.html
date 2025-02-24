@@ -11,6 +11,9 @@
         #qrcode {
             margin-top: 20px;
         }
+        .box {
+            padding-left: 40%;
+        }
     </style>
 </head>
 <body>
@@ -18,7 +21,6 @@
         <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
         <h1>Assorted Projects</h1>
     </header>
-
     <nav>
         <ul>
             <li><a href="index.html">Home</a></li>
@@ -27,10 +29,12 @@
             <li><a href="qr.html">QR code generator</a></li>
         </ul>
     </nav>
-    <h2>QR Code Generator</h2>
-    <input type="text" id="url" placeholder="Enter website URL" />
-    <button onclick="generateQRCode()">Generate QR Code</button>
-    <div id="qrcode"></div>
+    <div class = "box">
+        <h2>QR Code Generator</h2>
+        <input type="text" id="url" placeholder="Enter website URL" />
+        <button onclick="generateQRCode()">Generate QR Code</button>
+        <div id="qrcode"></div>
+    </div>
     <footer>
         <p>&copy; 2024 Assorted Projects. All rights reserved.</p>
     </footer>
