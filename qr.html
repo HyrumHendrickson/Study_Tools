@@ -14,6 +14,22 @@
         .box {
             padding-left: 40%;
         }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            width: 100px;
+            margin-left: 40px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -34,10 +50,15 @@
         <input type="text" id="url" placeholder="Enter website URL" />
         <button onclick="generateQRCode()">Generate QR Code</button>
         <div id="qrcode"></div>
+        <a id="downloadBtn" style="display: none; margin-top: 10px;" class="button">Download QR Code</a>
+
     </div>
     <footer>
         <p>&copy; 2024 Assorted Projects. All rights reserved.</p>
     </footer>
+    
+
+
     <script>
         function generateQRCode() {
             let url = document.getElementById("url").value;
@@ -46,7 +67,22 @@
                 return;
             }
             document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), url);
+
+            let qrcode = new QRCode(document.getElementById("qrcode"), {
+                text: url,
+                width: 256,
+                height: 256
+            });
+
+            setTimeout(() => {
+                let qrImage = document.querySelector("#qrcode img");
+                if (qrImage) {
+                    let downloadBtn = document.getElementById("downloadBtn");
+                    downloadBtn.href = qrImage.src;
+                    downloadBtn.download = "qrcode.png";
+                    downloadBtn.style.display = "block"; // Show the button
+                }
+            }, 500); // Wait a little for the QR code to generate
         }
     </script>
 </body>
