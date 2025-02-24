@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Tools Compository</title>
+    <link rel="icon" href="logo.jpg">
     <style>
         :root {
             --primary-bg: #894e59;
@@ -26,7 +27,7 @@
         header {
             background-color: var(--primary-bg);
             color: var(--white);
-            padding: 1rem 0;
+            padding: 0.6rem 0;
             text-align: center;
         }
 
@@ -71,18 +72,32 @@
             bottom: 0;
             width: 100%;
         }
+        .logo {
+            max-width: 99px; /* Adjust width as needed */
+            height: auto; /* Maintain aspect ratio */
+        }
+        .logo-box {
+            position: absolute;
+            top: 0px; /* Adjust as needed */
+            left: 0px; /* Adjust as needed */
+            
+        }
+
+
     </style>
 </head>
 <body>
     <header>
+        <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
         <h1>Study Tools Compository</h1>
-        <p>Your one-stop shop for study aids!</p>
     </header>
 
     <nav>
+        
         <ul>
+            
             <li><a href="vector.html">Vector Calculator</a></li>
-            <li><a href="heatmap.html"></a>Smoothing Heatmap</li>
+            <li><a href="heatmap.html">Smoothing Heatmap</a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
