@@ -74,3 +74,62 @@ footer {
     left: 0px; /* Adjust as needed */
     
 }
+
+
+
+
+
+
+
+
+/* Card Container */
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Card Styling */
+.card {
+    background: var(--nav-bg);
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    padding: 20px;
+    margin: 15px;
+    text-align: center;
+    transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h2 {
+    color: white;
+}
+
+.card p {
+    color: white;
+}
+
+/* Button Styling */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;  /* Slightly larger padding for better touch interaction */
+    margin-top: 15px; /* Increased spacing */
+    background-color: var(--primary-bg);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px; /* Slightly more rounded corners */
+    font-weight: bold; /* Make text more readable */
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+    border: 2px solid transparent;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
