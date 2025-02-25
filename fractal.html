@@ -109,6 +109,7 @@
                 <button id="dragonCurveButton" class="fractal-button">Dragon Curve</button>
                 <button id="hilbertCurveButton" class="fractal-button">Hilbert Curve</button>
                 <button id="treeButton" class="fractal-button">Fractal Tree</button>
+                <button id="roseButton" class="fractal-button">Desert Rose</button>
             </div>
             
             <div class="instructions">
@@ -149,6 +150,7 @@
         const dragonCurveButton = document.getElementById("dragonCurveButton");
         const hilbertCurveButton = document.getElementById("hilbertCurveButton");
         const treeButton = document.getElementById("treeButton");
+        const roseButton = document.getElementById("roseButton");
 
         let x = canvas.width / 2;
         let y = canvas.height / 2;
@@ -407,6 +409,21 @@ function drawTree(length, depth) {
 setColor("#00FF00");
 drawTree(100, 7);`;
 
+const roseCode = `var n = 1000;
+var a = 61;
+var l = 20;
+var g = 5;
+for(var i = 0; i < n; i++) {
+   moveForward(l+i/g);
+   turnLeft(a);
+   penDown();
+   if(i % 2 == 0) {
+      penUp();
+  }
+}
+
+`;
+
         // Event listeners for fractal buttons
         kochCurveButton.addEventListener("click", function() {
             codeTextarea.value = kochCurveCode;
@@ -430,6 +447,11 @@ drawTree(100, 7);`;
 
         treeButton.addEventListener("click", function() {
             codeTextarea.value = treeCode;
+            executeCode();
+        });
+
+        roseButton.addEventListener("click", function() {
+            codeTextarea.value = roseCode;
             executeCode();
         });
 
