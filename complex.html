@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Number Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .code-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .examples {
+            margin-top: 20px;
+        }
+        .example-code {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .example-code:hover {
+            background-color: #eee;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            border-radius: 4px;
+        }
+        .axes-info {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        .zoom-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .zoom-controls button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        .settings {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .settings label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        #status {
+            color: #4CAF50;
+            margin-top: 5px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
+        <h1>Assorted Projects</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="fractal.html">Fractal Canvas</a></li>
+            <li><a href="complex.html">Complex Graphing</a></li>
+            <li><a href="vector.html">Vector Calculator</a></li>
+            <li><a href="lines.html">Linear Regression</a></li>
+            <li><a href="qr.html">QR Code Generator</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Complex Number Visualizer</h1>
+        
+        <div class="canvas-container">
+            <div>
+                <canvas id="complexPlane" width="600" height="600"></canvas>
+                <div class="axes-info">
+                    <span>Horizontal: Real axis | Vertical: Imaginary axis</span>
+                </div>
+                <div class="settings">
+                    <label>
+                        <input type="checkbox" id="showOriginLines" checked>
+                        Show lines to origin
+                    </label>
+                </div>
+                <div class="zoom-controls">
+                    <button id="zoomIn">Zoom In</button>
+                    <button id="zoomOut">Zoom Out</button>
+                    <button id="resetView">Reset View</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-area">
+            <textarea id="codeInput" placeholder="Code goes here."></textarea>
+            <div id="status"></div>
+            <div class="controls">
+                <button id="runButton">Run Code</button>
+                <button id="clearButton">Clear Canvas</button>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>Available Functions:</h3>
+            <ul>
+                <li><code>new Complex(real, imag)</code> - Create a complex number</li>
+                <li><code>plot(z, color)</code> - Plot a complex number on the plane</li>
+                <li><code>plotFunction(f, xMin, xMax, yMin, yMax, step)</code> - Plot a complex function over a range</li>
+                <li><code>plotGrid(xMin, xMax, yMin, yMax, step)</code> - Plot a grid on the complex plane</li>
+                <li><code>clearCanvas()</code> - Clear the canvas</li>
+                <li><code>exp(z)</code> - Complex exponential function</li>
+                <li><code>sin(z)</code>, <code>cos(z)</code> - Complex trigonometric functions</li>
+                <li><code>pow(z, n)</code> - Complex power function</li>
+            </ul>
+            <p>The canvas represents the complex plane with the real axis horizontally and the imaginary axis vertically.</p>
+        </div>
+        
+        <div class="examples">
+            <h3>Example Code:</h3>
+            <div class="example-code" id="example1">// Plot basic complex numbers
+plot(new Complex(3, 2), 'red');
+plot(new Complex(-1, -1), 'blue');
+plot(new Complex(0, 2), 'green');</div>
+            
+            <div class="example-code" id="example2">// Plot a unit circle
+for (let theta = 0; theta <= 2 * Math.PI; theta += 0.1) {
+    const x = Math.cos(theta);
+    const y = Math.sin(theta);
+    plot(new Complex(x, y), 'purple');
+}</div>
+            
+            <div class="example-code" id="example3">// Plot a complex function z² + 1
+function f(z) {
+    return z.multiply(z).add(new Complex(1, 0));
+}
+
+// Plot a grid and apply the function to each point
+plotGrid(-2, 2, -2, 2, 0.5);
+plotFunction(f, -2, 2, -2, 2, 0.5, 'red');</div>
+
+            <div class="example-code" id="example4">// Plot complex exponential
+function complexExp(z) {
+    return exp(z);
+}
+
+// Plot original grid points
+plotGrid(-2, 2, -2, 2, 0.2, '#aaa');
+
+// Plot transformed points
+plotFunction(complexExp, -2, 2, -2, 2, 0.2, 'blue');</div>
+
+            <div class="example-code" id="example5">// Mandelbrot Set preview (simplified)
+function mandelbrot(c, maxIterations = 20) {
+    let z = new Complex(0, 0);
+    let iterations = 0;
+    
+    while (iterations < maxIterations && z.magnitude() < 2) {
+        z = z.multiply(z).add(c);
+        iterations++;
+    }
+    
+    if (iterations === maxIterations) {
+        return true; // Point is in the set
+    }
+    return false; // Point escaped
+}
+
+// Check if points are in the Mandelbrot set
+for (let x = -2; x <= 0.5; x += 0.05) {
+    for (let y = -1.5; y <= 1.5; y += 0.05) {
+        const c = new Complex(x, y);
+        if (mandelbrot(c)) {
+            plot(c, 'black');
+        }
+    }
+}</div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Assorted Projects. All rights reserved.</p>
+    </footer>
+    <script>
+        // Complex Number class
+        class Complex {
+            constructor(real, imag) {
+                this.real = real;
+                this.imag = imag;
+            }
+            
+            add(other) {
+                return new Complex(
+                    this.real + other.real,
+                    this.imag + other.imag
+                );
+            }
+            
+            subtract(other) {
+                return new Complex(
+                    this.real - other.real,
+                    this.imag - other.imag
+                );
+            }
+            
+            multiply(other) {
+                return new Complex(
+                    this.real * other.real - this.imag * other.imag,
+                    this.real * other.imag + this.imag * other.real
+                );
+            }
+            
+            divide(other) {
+                const denominator = other.real * other.real + other.imag * other.imag;
+                return new Complex(
+                    (this.real * other.real + this.imag * other.imag) / denominator,
+                    (this.imag * other.real - this.real * other.imag) / denominator
+                );
+            }
+            
+            conjugate() {
+                return new Complex(this.real, -this.imag);
+            }
+            
+            magnitude() {
+                return Math.sqrt(this.real * this.real + this.imag * this.imag);
+            }
+            
+            phase() {
+                return Math.atan2(this.imag, this.real);
+            }
+            
+            toString() {
+                if (this.imag === 0) return `${this.real}`;
+                if (this.real === 0) return `${this.imag}i`;
+                const sign = this.imag < 0 ? '-' : '+';
+                return `${this.real} ${sign} ${Math.abs(this.imag)}i`;
+            }
+        }
+
+        // Complex math functions
+        function exp(z) {
+            const r = Math.exp(z.real);
+            return new Complex(
+                r * Math.cos(z.imag),
+                r * Math.sin(z.imag)
+            );
+        }
+        
+        function sin(z) {
+            return new Complex(
+                Math.sin(z.real) * Math.cosh(z.imag),
+                Math.cos(z.real) * Math.sinh(z.imag)
+            );
+        }
+        
+        function cos(z) {
+            return new Complex(
+                Math.cos(z.real) * Math.cosh(z.imag),
+                -Math.sin(z.real) * Math.sinh(z.imag)
+            );
+        }
+        
+        function pow(z, n) {
+            if (Number.isInteger(n)) {
+                let result = new Complex(1, 0);
+                for (let i = 0; i < Math.abs(n); i++) {
+                    result = result.multiply(z);
+                }
+                if (n < 0) {
+                    return new Complex(1, 0).divide(result);
+                }
+                return result;
+            } else {
+                // Use complex logarithm for non-integer powers (simplified)
+                const r = z.magnitude();
+                const theta = z.phase();
+                const newR = Math.pow(r, n);
+                const newTheta = theta * n;
+                return new Complex(
+                    newR * Math.cos(newTheta),
+                    newR * Math.sin(newTheta)
+                );
+            }
+        }
+
+        // Canvas setup
+        const canvas = document.getElementById('complexPlane');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Scale settings
+        let xMin = -5;
+        let xMax = 5;
+        let yMin = -5;
+        let yMax = 5;
+        
+        // Default scale for reset
+        const defaultXMin = -5;
+        const defaultXMax = 5;
+        const defaultYMin = -5;
+        const defaultYMax = 5;
+        
+        // Status element
+        const statusElement = document.getElementById('status');
+        const showOriginLinesCheckbox = document.getElementById('showOriginLines');
+        
+        // Store all plotted points
+        let plottedPoints = [];
+        
+        // Function to convert complex number to canvas coordinates
+        function complexToCanvas(z) {
+            const x = ((z.real - xMin) / (xMax - xMin)) * width;
+            const y = height - ((z.imag - yMin) / (yMax - yMin)) * height; // Flip y-axis
+            return { x, y };
+        }
+        
+        // Function to convert canvas coordinates to complex number
+        function canvasToComplex(x, y) {
+            const real = xMin + (x / width) * (xMax - xMin);
+            const imag = yMax - (y / height) * (yMax - yMin); // Flip y-axis
+            return new Complex(real, imag);
+        }
+        
+        // Draw axes and grid
+        function drawAxes() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 0.5;
+            
+            // Calculate grid step based on current zoom level
+            const rangeX = xMax - xMin;
+            const rangeY = yMax - yMin;
+            
+            // Determine appropriate grid spacing
+            let gridStepX = 1;
+            let gridStepY = 1;
+            
+            if (rangeX <= 2) gridStepX = 0.2;
+            else if (rangeX <= 5) gridStepX = 0.5;
+            else if (rangeX <= 20) gridStepX = 1;
+            else if (rangeX <= 50) gridStepX = 5;
+            else gridStepX = 10;
+            
+            if (rangeY <= 2) gridStepY = 0.2;
+            else if (rangeY <= 5) gridStepY = 0.5;
+            else if (rangeY <= 20) gridStepY = 1;
+            else if (rangeY <= 50) gridStepY = 5;
+            else gridStepY = 10;
+            
+            // Vertical grid lines
+            for (let x = Math.ceil(xMin / gridStepX) * gridStepX; x <= xMax; x += gridStepX) {
+                if (Math.abs(x) < 1e-10) continue; // Skip the x=0 line (will draw as axis)
+                const canvasX = ((x - xMin) / (xMax - xMin)) * width;
+                ctx.beginPath();
+                ctx.moveTo(canvasX, 0);
+                ctx.lineTo(canvasX, height);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let y = Math.ceil(yMin / gridStepY) * gridStepY; y <= yMax; y += gridStepY) {
+                if (Math.abs(y) < 1e-10) continue; // Skip the y=0 line (will draw as axis)
+                const canvasY = height - ((y - yMin) / (yMax - yMin)) * height;
+                ctx.beginPath();
+                ctx.moveTo(0, canvasY);
+                ctx.lineTo(width, canvasY);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            
+            // x-axis (only if 0 is within the visible range)
+            if (yMin <= 0 && yMax >= 0) {
+                const yZero = height - ((0 - yMin) / (yMax - yMin)) * height;
+                ctx.beginPath();
+                ctx.moveTo(0, yZero);
+                ctx.lineTo(width, yZero);
+                ctx.stroke();
+            }
+            
+            // y-axis (only if 0 is within the visible range)
+            if (xMin <= 0 && xMax >= 0) {
+                const xZero = ((0 - xMin) / (xMax - xMin)) * width;
+                ctx.beginPath();
+                ctx.moveTo(xZero, 0);
+                ctx.lineTo(xZero, height);
+                ctx.stroke();
+            }
+            
+            // Draw axis labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            
+            // x-axis labels
+            for (let x = Math.ceil(xMin / gridStepX) * gridStepX; x <= xMax; x += gridStepX) {
+                if (Math.abs(x) < 1e-10) continue; // Skip labeling origin
+                const canvasX = ((x - xMin) / (xMax - xMin)) * width;
+                
+                // Only draw labels that are within the canvas bounds with some padding
+                if (canvasX > 15 && canvasX < width - 15) {
+                    const yPos = (yMin <= 0 && yMax >= 0) ? 
+                        (height - ((0 - yMin) / (yMax - yMin)) * height) + 15 : 
+                        height - 10;
+                    ctx.fillText(x.toFixed(gridStepX < 1 ? 1 : 0), canvasX - 5, yPos);
+                }
+            }
+            
+            // y-axis labels
+            for (let y = Math.ceil(yMin / gridStepY) * gridStepY; y <= yMax; y += gridStepY) {
+                if (Math.abs(y) < 1e-10) continue; // Skip labeling origin
+                const canvasY = height - ((y - yMin) / (yMax - yMin)) * height;
+                
+                // Only draw labels that are within the canvas bounds with some padding
+                if (canvasY > 15 && canvasY < height - 15) {
+                    const xPos = (xMin <= 0 && xMax >= 0) ? 
+                        ((0 - xMin) / (xMax - xMin)) * width + 5 : 
+                        10;
+                    ctx.fillText(y.toFixed(gridStepY < 1 ? 1 : 0), xPos, canvasY + 4);
+                }
+            }
+            
+            // Origin label
+            if (xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
+                const xZero = ((0 - xMin) / (xMax - xMin)) * width;
+                const yZero = height - ((0 - yMin) / (yMax - yMin)) * height;
+                ctx.fillText('0', xZero - 10, yZero + 15);
+            }
+        }
+        
+        // Plot a single complex number
+        function plot(z, color = '#ff5722') {
+            // Store plotted point in memory
+            plottedPoints.push({
+                z: z,
+                color: color
+            });
+            
+            // Draw the point
+            drawPoint(z, color);
+        }
+
+        // Draw a plotted point
+        function drawPoint(z, color) {
+            const pos = complexToCanvas(z);
+            
+            // Only draw if the point is within the canvas
+            if (pos.x >= 0 && pos.x <= width && pos.y >= 0 && pos.y <= height) {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw line from origin to point if origin is visible and option is enabled
+                if (showOriginLinesCheckbox.checked && 
+                    xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
+                    ctx.strokeStyle = color + '80'; // Add transparency
+                    ctx.beginPath();
+                    const origin = complexToCanvas(new Complex(0, 0));
+                    ctx.moveTo(origin.x, origin.y);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Redraw all plotted points
+        function redrawPoints() {
+            for (const point of plottedPoints) {
+                drawPoint(point.z, point.color);
+            }
+        }
+        
+        // Plot a grid on the complex plane
+        function plotGrid(xStart, xEnd, yStart, yEnd, step, color = '#aaa') {
+            for (let x = xStart; x <= xEnd; x += step) {
+                for (let y = yStart; y <= yEnd; y += step) {
+                    plot(new Complex(x, y), color);
+                }
+            }
+        }
+        
+        // Plot a complex function
+        function plotFunction(f, xStart, xEnd, yStart, yEnd, step, color = '#2196F3') {
+            for (let x = xStart; x <= xEnd; x += step) {
+                for (let y = yStart; y <= yEnd; y += step) {
+                    try {
+                        const z = new Complex(x, y);
+                        const result = f(z);
+                        if (isValidComplex(result)) {
+                            plot(result, color);
+                        }
+                    } catch (error) {
+                        console.warn(`Error calculating function at (${x}, ${y}): ${error.message}`);
+                    }
+                }
+            }
+        }
+        
+        // Check if result is a valid complex number
+        function isValidComplex(z) {
+            return z instanceof Complex && 
+                  !isNaN(z.real) && !isNaN(z.imag) && 
+                  isFinite(z.real) && isFinite(z.imag);
+        }
+        
+        // Clear the canvas and redraw axes
+        function clearCanvas() {
+            plottedPoints = [];
+            drawAxes();
+        }
+        
+        // Refresh the canvas (redraw axes and plotted points)
+        function refreshCanvas() {
+            drawAxes();
+            redrawPoints();
+        }
+        
+        // Zoom functions
+        function zoomIn() {
+            const rangeX = xMax - xMin;
+            const rangeY = yMax - yMin;
+            const centerX = (xMax + xMin) / 2;
+            const centerY = (yMax + yMin) / 2;
+            
+            xMin = centerX - rangeX / 4;
+            xMax = centerX + rangeX / 4;
+            yMin = centerY - rangeY / 4;
+            yMax = centerY + rangeY / 4;
+            
+            refreshCanvas();
+            updateStatus(`View: Real [${xMin.toFixed(2)}, ${xMax.toFixed(2)}], Imaginary [${yMin.toFixed(2)}, ${yMax.toFixed(2)}]`);
+        }
+        
+        function zoomOut() {
+            const rangeX = xMax - xMin;
+            const rangeY = yMax - yMin;
+            const centerX = (xMax + xMin) / 2;
+            const centerY = (yMax + yMin) / 2;
+            
+            xMin = centerX - rangeX;
+            xMax = centerX + rangeX;
+            yMin = centerY - rangeY;
+            yMax = centerY + rangeY;
+            
+            refreshCanvas();
+            updateStatus(`View: Real [${xMin.toFixed(2)}, ${xMax.toFixed(2)}], Imaginary [${yMin.toFixed(2)}, ${yMax.toFixed(2)}]`);
+        }
+        
+        function resetView() {
+            xMin = defaultXMin;
+            xMax = defaultXMax;
+            yMin = defaultYMin;
+            yMax = defaultYMax;
+            
+            refreshCanvas();
+            updateStatus('View reset to default');
+        }
+        
+        // Update status message
+        function updateStatus(message) {
+            statusElement.textContent = message;
+            // Clear status after 3 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+            }, 3000);
+        }
+        
+        // Enable canvas drag to pan
+        let isDragging = false;
+        let lastX, lastY;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - lastX;
+            const deltaY = e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            
+            // Calculate complex plane movement based on canvas deltas
+            const rangeX = xMax - xMin;
+            const rangeY = yMax - yMin;
+            
+            const moveX = (deltaX / width) * rangeX;
+            const moveY = (deltaY / height) * rangeY;
+            
+            xMin -= moveX;
+            xMax -= moveX;
+            yMin += moveY;  // Inverted because canvas Y is flipped
+            yMax += moveY;
+            
+            refreshCanvas();
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'default';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'default';
+        });
+        
+        // Mouse wheel zooming
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Convert mouse position to complex plane coordinates
+            const zoomPoint = canvasToComplex(mouseX, mouseY);
+            
+            // Zoom factor
+            const factor = e.deltaY > 0 ? 1.1 : 0.9;
+            
+            // Calculate new ranges
+            const rangeX = xMax - xMin;
+            const rangeY = yMax - yMin;
+            const newRangeX = rangeX * factor;
+            const newRangeY = rangeY * factor;
+            
+            // Calculate how far the zoom point is from the edges as a proportion
+            const propX = (zoomPoint.real - xMin) / rangeX;
+            const propY = (zoomPoint.imag - yMin) / rangeY;
+            
+            // Apply the zoom centered on mouse position
+            xMin = zoomPoint.real - propX * newRangeX;
+            xMax = zoomPoint.real + (1 - propX) * newRangeX;
+            yMin = zoomPoint.imag - propY * newRangeY;
+            yMax = zoomPoint.imag + (1 - propY) * newRangeY;
+            
+            refreshCanvas();
+        });
+        
+        // Toggle origin lines checkbox
+        showOriginLinesCheckbox.addEventListener('change', () => {
+            refreshCanvas();
+            updateStatus(`Origin lines ${showOriginLinesCheckbox.checked ? 'shown' : 'hidden'}`);
+        });
+        
+        // Initial setup
+        drawAxes();
+        
+        // Event listeners
+        document.getElementById('runButton').addEventListener('click', function() {
+            try {
+                const code = document.getElementById('codeInput').value;
+                clearCanvas();
+                eval(code);
+                updateStatus('Code executed successfully');
+            } catch (error) {
+                console.error('Error executing code:', error);
+                updateStatus(`Error: ${error.message}`);
+            }
+        });
+        
+        document.getElementById('clearButton').addEventListener('click', function() {
+            clearCanvas();
+            document.getElementById('codeInput').value = '';
+            updateStatus('Canvas cleared');
+        });
+        
+        document.getElementById('zoomIn').addEventListener('click', zoomIn);
+        document.getElementById('zoomOut').addEventListener('click', zoomOut);
+        document.getElementById('resetView').addEventListener('click', resetView);
+        
+        // Example code event listeners
+        document.querySelectorAll('.example-code').forEach(example => {
+            example.addEventListener('click', function() {
+                document.getElementById('codeInput').value = this.textContent;
+                updateStatus('Example code loaded');
+            });
+        });
+    </script>
+</body>
+</html>
