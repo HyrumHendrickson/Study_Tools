@@ -126,6 +126,8 @@
                     <li><strong>getY()</strong> - Returns the current Y coordinate of the pen.</li>
                     <li><strong>setX(value)</strong> - Sets the X coordinate of the pen.</li>
                     <li><strong>setY(value)</strong> - Sets the Y coordinate of the pen.</li>
+                    <li><strong>getAngle(degrees)</strong> - Returns the angle of the pen.</li>
+                    <li><strong>setAngle(degrees)</strong> - Sets the angle of the pen.</li>
                     <li><strong>console.log(string)</strong> - Sends text to the console.</li>
                     <li><strong>Basic Javascript syntax</strong> - var, while, if, function, etc.</li>
                 </ul>
@@ -152,47 +154,47 @@
         const treeButton = document.getElementById("treeButton");
         const roseButton = document.getElementById("roseButton");
 
-        let x = canvas.width / 2;
-        let y = canvas.height / 2;
-        let angle = 0;
-        let isPenDown = true;
-        let penColor = "#FFFFFF";
-        let backgroundColor = "#000000";
+        let x_inside = canvas.width / 2;
+        let y_inside = canvas.height / 2;
+        let angle_inside = 0;
+        let isPenDown_inside = true;
+        let penColor_inside = "#FFFFFF";
+        let backgroundColor_inside = "#000000";
 
         function moveForward(dist) {
-            const newX = x + dist * Math.cos(angle);
-            const newY = y + dist * Math.sin(angle);
-            if (isPenDown) {
+            const newX = x_inside + dist * Math.cos(angle_inside);
+            const newY = y_inside + dist * Math.sin(angle_inside);
+            if (isPenDown_inside) {
                 ctx.beginPath();
-                ctx.moveTo(x, y);
+                ctx.moveTo(x_inside, y_inside);
                 ctx.lineTo(newX, newY);
-                ctx.strokeStyle = penColor;
+                ctx.strokeStyle = penColor_inside;
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
-            x = newX;
-            y = newY;
+            x_inside = newX;
+            y_inside = newY;
         }
 
         function turnLeft(deg) {
-            angle -= (deg * Math.PI) / 180;
+            angle_inside -= (deg * Math.PI) / 180;
         }
 
         function turnRight(deg) {
-            angle += (deg * Math.PI) / 180;
+            angle_inside += (deg * Math.PI) / 180;
         }
 
         function penUp() {
-            isPenDown = false;
+            isPenDown_inside = false;
         }
 
         function penDown() {
-            isPenDown = true;
+            isPenDown_inside = true;
         }
 
         function setColor(color) {
             if (/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-                penColor = color;
+                penColor_inside = color;
             } else {
                 alert("Invalid hex color format. Use #RRGGBB or #RGB.");
             }
@@ -200,38 +202,45 @@
 
         function setBackgroundColor(color) {
             if (/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-                backgroundColor = color;
-                canvas.style.backgroundColor = backgroundColor;
+                backgroundColor_inside = color;
+                canvas.style.backgroundColor = backgroundColor_inside;
             } else {
                 alert("Invalid hex color format. Use #RRGGBB or #RGB.");
             }
         }
 
         function getX() {
-            return x;
+            return x_inside;
         }
 
         function getY() {
-            return y;
+            return y_inside;
         }
 
         function setX(value) {
-            x = value;
+            x_inside = value;
         }
 
         function setY(value) {
-            y = value;
+            y_inside = value;
+        }
+        function getAngle() {
+            return (angle_inside * 180) / Math.PI;
+        }
+
+        function setAngle(degrees) {
+            angle_inside = (degrees * Math.PI) / 180;
         }
 
         function executeCode() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            x = canvas.width / 2;
-            y = canvas.height / 2;
-            angle = 0;
-            isPenDown = true;
-            penColor = "#FFFFFF";
+            x_inside = canvas.width / 2;
+            y_inside = canvas.height / 2;
+            angle_inside = 0;
+            isPenDown_inside = true;
+            penColor_inside = "#FFFFFF";
             // Keep the current background color
-            canvas.style.backgroundColor = backgroundColor;
+            canvas.style.backgroundColor = backgroundColor_inside;
             
             const userCode = codeTextarea.value;
             try {
@@ -269,8 +278,8 @@ koch(300, 4);`;
         // Fixed Sierpinski Triangle code
         const sierpinskiTriangleCode = `// Sierpinski Triangle
 // Move to starting position
-setX(350);
-setY(400);
+setX(100);
+setY(350);
 
 function drawTriangle(size) {
   for (let i = 0; i < 3; i++) {
@@ -297,8 +306,6 @@ function sierpinski(size, depth) {
   }
 }
 
-// Set angle to point upward initially
-angle = -Math.PI/2;
 setColor("#FF00FF");
 sierpinski(300, 4);`;
 
@@ -307,7 +314,7 @@ sierpinski(300, 4);`;
 // Move to starting position
 setX(150);
 setY(250);
-angle = 0;
+setAngle(0);
 
 function dragon(length, depth, direction) {
   if (depth === 0) {
@@ -331,7 +338,7 @@ dragon(200, 10, 1);`;
 // Move to starting position
 setX(100);
 setY(100);
-angle = 0;
+setAngle(0);
 
 function hilbert(length, depth, direction) {
   if (depth === 0) {
@@ -365,7 +372,8 @@ hilbert(20, 5, 1);`;
 // Move to starting position
 setX(250);
 setY(400);
-angle = -90 * (Math.PI / 180); // Point upward
+ // Point upward
+setAngle(270)
 
 function drawTree(length, depth) {
   if (depth === 0) return;
@@ -376,7 +384,7 @@ function drawTree(length, depth) {
   // Save position for returning after drawing branches
   const currentX = getX();
   const currentY = getY();
-  const currentAngle = angle;
+  const currentAngle = getAngle();
   
   // Draw right branch
   turnRight(30);
@@ -386,7 +394,7 @@ function drawTree(length, depth) {
   penUp();
   setX(currentX);
   setY(currentY);
-  angle = currentAngle;
+  setAngle(currentAngle);
   penDown();
   
   // Draw left branch
@@ -397,7 +405,7 @@ function drawTree(length, depth) {
   penUp();
   setX(currentX);
   setY(currentY);
-  angle = currentAngle;
+  setAngle(currentAngle);
   penDown();
   
   // Move back to start of branch
@@ -407,15 +415,15 @@ function drawTree(length, depth) {
 }
 
 setColor("#00FF00");
-drawTree(100, 7);`;
+drawTree(100, 12);`;
 
 const roseCode = `var n = 1000;
-var a = 61;
-var l = 20;
-var g = 5;
+var angle = 61;
+var length = 20;
+var growthConstant = 5;
 for(var i = 0; i < n; i++) {
-   moveForward(l+i/g);
-   turnLeft(a);
+   moveForward(length+i/growthConstant);
+   turnLeft(angle);
    penDown();
    if(i % 2 == 0) {
       penUp();
