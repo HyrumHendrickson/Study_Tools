@@ -116,6 +116,7 @@
                 <h2>Instructions</h2>
                 <ul>
                     <li><strong>moveForward(distance)</strong> - Moves the pen forward by the given distance.</li>
+                    <li><strong>moveTo(x,y)</strong> - Moves the pen to a given location.</li>
                     <li><strong>turnLeft(degrees)</strong> - Rotates the pen left by the given degrees.</li>
                     <li><strong>turnRight(degrees)</strong> - Rotates the pen right by the given degrees.</li>
                     <li><strong>penUp()</strong> - Lifts the pen so it moves without drawing.</li>
@@ -230,6 +231,19 @@
 
         function setAngle(degrees) {
             angle_inside = (degrees * Math.PI) / 180;
+        }
+
+        function moveTo(newX, newY) {
+            if (isPenDown_inside) {
+                ctx.beginPath();
+                ctx.moveTo(x_inside, y_inside);
+                ctx.lineTo(newX, newY);
+                ctx.strokeStyle = penColor_inside;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            x_inside = newX;
+            y_inside = newY;
         }
 
         function executeCode() {
