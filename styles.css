@@ -14,6 +14,7 @@ body {
     padding: 0;
     background-color: var(--content-bg);
     color: var(--text-color);
+    min-height: 500px;
 }
 
 header {
@@ -60,10 +61,10 @@ footer {
     color: var(--white);
     text-align: center;
     padding: 1rem 0;
-    position: fixed;
-    bottom: 0;
+    position: relative; /* or 'static' */
     width: 100%;
 }
+
 .logo {
     max-width: 99px; /* Adjust width as needed */
     height: auto; /* Maintain aspect ratio */
