@@ -1,9 +1,9 @@
 :root {
-    --primary-bg: #aa4655;
-    --secondary-bg: #913b4b;
-    --nav-bg: #4c5c8e;
-    --hover-bg: #de5d74;
-    --content-bg: #f4f5ee;
+    --primary-bg: #913b4b;
+    --secondary-bg: #5b333a;
+    --nav-bg: #2f3542;
+    --hover-bg: #642530;
+    --content-bg: #ffffff;
     --text-color: #0d0d0d;
     --white: #ffffff;
 }
@@ -34,6 +34,7 @@ nav ul {
     padding: 0;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 nav ul li {
