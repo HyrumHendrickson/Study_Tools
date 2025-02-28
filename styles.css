@@ -1,10 +1,10 @@
 :root {
-    --primary-bg: #894e59;
+    --primary-bg: #c75467;
     --secondary-bg: #894e59;
-    --nav-bg: #66577d;
+    --nav-bg: #4c5c8e;
     --hover-bg: #de5d74;
-    --content-bg: #5a5463;
-    --text-color: #e0e0e0;
+    --content-bg: #f4f5ee;
+    --text-color: #0d0d0d;
     --white: #ffffff;
 }
 
@@ -124,7 +124,7 @@ footer {
 }
 
 .btn:hover {
-    background-color: #0056b3;
+    background-color: var(--secondary-bg);
 }
 
 @media (max-width: 767px){
