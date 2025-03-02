@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rexburg Weather Data Dashboard (2000-2020)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #f39c12;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --danger-color: #e74c3c;
+            --text-color: #333;
+            --padding: 1rem;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--light-color);
+            padding: 20px;
+        }
+
+        header {
+            padding: var(--padding);
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--padding);
+            background-color: var(--dark-color);
+            color: white;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: var(--padding);
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--dark-color);
+        }
+
+        select, button, input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: var(--padding);
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: var(--padding);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .stat-card.temperature {
+            border-top-color: #e74c3c;
+        }
+
+        .stat-card.humidity {
+            border-top-color: #3498db;
+        }
+
+        .stat-card.wind {
+            border-top-color: #2ecc71;
+        }
+
+        .stat-card.precipitation {
+            border-top-color: #9b59b6;
+        }
+
+        .stat-card.pressure {
+            border-top-color: #f39c12;
+        }
+
+        .stat-title {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .chart-container {
+            padding: var(--padding);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .chart-header {
+            padding: 1rem;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .chart-body {
+            padding: 1rem;
+            height: 300px;
+            position: relative;
+        }
+
+        .table-container {
+            padding: var(--padding);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .extreme-events {
+            padding: var(--padding);
+        }
+
+        .event-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .event-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: var(--padding);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .event-title {
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .event-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .event-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            color: var(--accent-color);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--padding);
+            background-color: #f5f5f5;
+            border-top: 1px solid #ddd;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            padding: 0 var(--padding);
+            color: var(--dark-color);
+        }
+
+        .tab-container {
+            padding: 0 var(--padding);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            padding: var(--padding) 0;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .event-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom styles for visualization features */
+        .custom-tooltip {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .seasonal-toggles {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .season-toggle {
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .season-toggle.winter {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .season-toggle.spring {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .season-toggle.summer {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .season-toggle.fall {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .season-toggle.disabled {
+            opacity: 0.5;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            padding: var(--padding);
+        }
+
+        .comparison-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .comparison-header {
+            padding: 1rem;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .comparison-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .comparison-body {
+            padding: 1rem;
+        }
+
+        .trend-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .trend-up {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .search-box {
+            padding: var(--padding);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .data-point {
+            cursor: pointer;
+        }
+
+        .highlight-point {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                r: 3;
+            }
+            50% {
+                r: 6;
+            }
+            100% {
+                r: 3;
+            }
+        }
+
+        /* Loader */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Rexburg Weather Data Dashboard</h1>
+                <p>Comprehensive analysis of weather data from 2000 to 2020</p>
+            </div>
+            <div>
+                <p id="data-summary">Loading data summary...</p>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="year-select">Select Year</label>
+                <select id="year-select">
+                    <option value="all">All Years</option>
+                    <!-- Years will be populated via JavaScript -->
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="metric-select">Select Metric</label>
+                <select id="metric-select">
+                    <option value="temperature">Temperature (°F)</option>
+                    <option value="humidity">Humidity (%)</option>
+                    <option value="wind-speed">Wind Speed (mph)</option>
+                    <option value="precipitation">Precipitation (inches)</option>
+                    <option value="pressure">Pressure (mb)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="view-select">View Type</label>
+                <select id="view-select">
+                    <option value="daily">Daily</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="seasonal">Seasonal</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="update-chart-btn">Update Chart</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="reset-filters-btn">Reset Filters</button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card temperature">
+                <div class="stat-title">Average Temperature</div>
+                <div class="stat-value" id="avg-temperature">--</div>
+                <div class="stat-unit">°F</div>
+            </div>
+            <div class="stat-card humidity">
+                <div class="stat-title">Average Humidity</div>
+                <div class="stat-value" id="avg-humidity">--</div>
+                <div class="stat-unit">%</div>
+            </div>
+            <div class="stat-card wind">
+                <div class="stat-title">Average Wind Speed</div>
+                <div class="stat-value" id="avg-wind-speed">--</div>
+                <div class="stat-unit">mph</div>
+            </div>
+            <div class="stat-card precipitation">
+                <div class="stat-title">Total Precipitation</div>
+                <div class="stat-value" id="total-precipitation">--</div>
+                <div class="stat-unit">inches</div>
+            </div>
+            <div class="stat-card pressure">
+                <div class="stat-title">Average Pressure</div>
+                <div class="stat-value" id="avg-pressure">--</div>
+                <div class="stat-unit">mb</div>
+            </div>
+        </div>
+
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="charts">Charts</div>
+                <div class="tab" data-tab="seasonal">Seasonal Analysis</div>
+                <div class="tab" data-tab="extremes">Extreme Events</div>
+                <div class="tab" data-tab="data">Data Table</div>
+                <div class="tab" data-tab="trends">Climate Trends</div>
+            </div>
+            
+            <div id="charts-tab" class="tab-content active">
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Weather Metrics Over Time</div>
+                            <div>
+                                <button id="download-chart-btn">Download Chart</button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="main-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Monthly Averages</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Yearly Trends</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="yearly-trend-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Correlation Analysis</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="correlation-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="seasonal-tab" class="tab-content">
+                <div class="section-title">Seasonal Weather Patterns</div>
+                
+                <div class="seasonal-toggles">
+                    <div class="season-toggle winter" data-season="Winter">Winter</div>
+                    <div class="season-toggle spring" data-season="Spring">Spring</div>
+                    <div class="season-toggle summer" data-season="Summer">Summer</div>
+                    <div class="season-toggle fall" data-season="Fall">Fall</div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Seasonal Temperature Patterns</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="seasonal-temp-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Seasonal Precipitation Patterns</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="seasonal-precip-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-container">
+                    <div class="comparison-card">
+                        <div class="comparison-header">
+                            <div class="comparison-title">Winter vs Summer</div>
+                        </div>
+                        <div class="comparison-body">
+                            <div id="winter-summer-comparison">
+                                <div class="loading">Loading comparison data...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <div class="comparison-header">
+                            <div class="comparison-title">Spring vs Fall</div>
+                        </div>
+                        <div class="comparison-body">
+                            <div id="spring-fall-comparison">
+                                <div class="loading">Loading comparison data...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="extremes-tab" class="tab-content">
+                <div class="section-title">Extreme Weather Events</div>
+                
+                <div class="event-cards">
+                    <div class="event-card">
+                        <div class="event-title">Hottest Day</div>
+                        <div class="event-date" id="hottest-date">Loading...</div>
+                        <div class="event-value" id="hottest-value">--°F</div>
+                        <p>The highest recorded temperature in Rexburg during this 20-year period.</p>
+                    </div>
+                    
+                    <div class="event-card">
+                        <div class="event-title">Coldest Day</div>
+                        <div class="event-date" id="coldest-date">Loading...</div>
+                        <div class="event-value" id="coldest-value">--°F</div>
+                        <p>The lowest recorded temperature in Rexburg during this 20-year period.</p>
+                    </div>
+                    
+                    <div class="event-card">
+                        <div class="event-title">Windiest Day</div>
+                        <div class="event-date" id="windiest-date">Loading...</div>
+                        <div class="event-value" id="windiest-value">-- mph</div>
+                        <p>The highest wind speed recorded in Rexburg during this 20-year period.</p>
+                    </div>
+                    
+                    <div class="event-card">
+                        <div class="event-title">Wettest Day</div>
+                        <div class="event-date" id="wettest-date">Loading...</div>
+                        <div class="event-value" id="wettest-value">-- inches</div>
+                        <p>The highest daily precipitation recorded in Rexburg during this 20-year period.</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Extreme Temperature Distribution</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="extreme-temp-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Heavy Precipitation Events</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="extreme-precip-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="data-tab" class="tab-content">
+                <div class="section-title">Data Explorer</div>
+                
+                <div class="search-box">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search by date (YYYY-MM-DD)">
+                    <button id="search-btn">Search</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Temperature (°F)</th>
+                                <th>Humidity (%)</th>
+                                <th>Wind Speed (mph)</th>
+                                <th>Precipitation (inches)</th>
+                                <th>Pressure (mb)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr>
+                                <td colspan="6" class="loading">Loading data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="text-align: center; padding: 1rem;">
+                    <button id="prev-page-btn">Previous</button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button id="next-page-btn">Next</button>
+                </div>
+            </div>
+            
+            <div id="trends-tab" class="tab-content">
+                <div class="section-title">Climate Trends Analysis</div>
+                
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">20-Year Temperature Trend</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="temp-trend-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">20-Year Precipitation Trend</div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="precip-trend-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-container">
+                    <div class="comparison-card">
+                        <div class="comparison-header">
+                            <div class="comparison-title">First Decade vs Second Decade</div>
+                        </div>
+                        <div class="comparison-body">
+                            <div id="decade-comparison">
+                                <div class="loading">Loading comparison data...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Rexburg Weather Data Dashboard (2000-2020) | Data analysis and visualization</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+let weatherData = [];
+let currentPage = 1;
+const rowsPerPage = 20;
+let charts = {};
+
+// Initialize the dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    setupEventListeners();
+});
+
+// Load and parse the CSV data
+async function loadData() {
+    try {
+        const response = await fetch('20002020rexburg.csv');
+        const csvText = await response.text();
+        
+        Papa.parse(csvText, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                weatherData = results.data;
+                
+                // Format dates and ensure proper data types
+                weatherData.forEach(row => {
+                    row.dateObj = new Date(row.Date);
+                    row.year = row.dateObj.getFullYear();
+                    row.month = row.dateObj.getMonth();
+                    row.day = row.dateObj.getDate();
+                    
+                    // Ensure numeric values
+                    row['Temperature (F)'] = parseFloat(row['Temperature (F)']);
+                    row['Humidity'] = parseFloat(row['Humidity']);
+                    row['Wind Speed (mph)'] = parseFloat(row['Wind Speed (mph)']);
+                    row['Precipitation (inches)'] = parseFloat(row['Precipitation (inches)']);
+                    row['Pressure (mb)'] = parseFloat(row['Pressure (mb)']);
+                });
+                
+                // Sort by date
+                weatherData.sort((a, b) => a.dateObj - b.dateObj);
+                
+                // Update UI
+                updateDataSummary();
+                populateYearSelect();
+                updateStats();
+                createCharts();
+                updateTable();
+                displayExtremeEvents();
+                updateSeasonalAnalysis();
+                updateClimateAnalysis();
+            },
+            error: function(error) {
+                console.error('Error parsing CSV:', error);
+                alert('Error loading data. Please check console for details.');
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching CSV:', error);
+        alert('Error loading data. Please check console for details.');
+    }
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    // Tab navigation
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+            
+            // Refresh charts if needed
+            if (this.dataset.tab === 'charts' && charts.mainChart) {
+                charts.mainChart.update();
+                charts.monthlyChart.update();
+            }
+        });
+    });
+    
+    // Update chart button
+    document.getElementById('update-chart-btn').addEventListener('click', function() {
+        updateCharts();
+    });
+    
+    // Reset filters button
+    document.getElementById('reset-filters-btn').addEventListener('click', function() {
+        document.getElementById('year-select').value = 'all';
+        document.getElementById('metric-select').value = 'temperature';
+        document.getElementById('view-select').value = 'monthly';
+        updateCharts();
+        updateStats();
+    });
+    
+    // Download chart button
+    document.getElementById('download-chart-btn').addEventListener('click', function() {
+        if (charts.mainChart) {
+            const link = document.createElement('a');
+            link.download = 'rexburg-weather-chart.png';
+            link.href = charts.mainChart.toBase64Image();
+            link.click();
+        }
+    });
+    
+    // Pagination buttons
+    document.getElementById('prev-page-btn').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateTable();
+        }
+    });
+    
+    document.getElementById('next-page-btn').addEventListener('click', function() {
+        const maxPage = Math.ceil(getFilteredData().length / rowsPerPage);
+        if (currentPage < maxPage) {
+            currentPage++;
+            updateTable();
+        }
+    });
+    
+    // Search button
+    document.getElementById('search-btn').addEventListener('click', function() {
+        const searchValue = document.getElementById('search-input').value.trim();
+        if (searchValue) {
+            const searchDate = new Date(searchValue);
+            const foundIndex = weatherData.findIndex(row => 
+                row.dateObj.getFullYear() === searchDate.getFullYear() &&
+                row.dateObj.getMonth() === searchDate.getMonth() &&
+                row.dateObj.getDate() === searchDate.getDate()
+            );
+            
+            if (foundIndex !== -1) {
+                currentPage = Math.ceil((foundIndex + 1) / rowsPerPage);
+                updateTable();
+                
+                // Highlight the found row
+                setTimeout(() => {
+                    const tableRows = document.querySelectorAll('#table-body tr');
+                    const rowIndex = foundIndex % rowsPerPage;
+                    if (tableRows[rowIndex]) {
+                        tableRows[rowIndex].style.backgroundColor = '#fffde7';
+                        tableRows[rowIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            tableRows[rowIndex].style.backgroundColor = '';
+                        }, 3000);
+                    }
+                }, 100);
+            } else {
+                alert('Date not found. Please try another date in the format YYYY-MM-DD.');
+            }
+        }
+    });
+    
+    // Season toggles
+    document.querySelectorAll('.season-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            this.classList.toggle('disabled');
+            updateSeasonalCharts();
+        });
+    });
+}
+
+// Update the data summary
+function updateDataSummary() {
+    const startDate = new Date(weatherData[0].Date).toLocaleDateString();
+    const endDate = new Date(weatherData[weatherData.length - 1].Date).toLocaleDateString();
+    
+    document.getElementById('data-summary').textContent = 
+        `${weatherData.length.toLocaleString()} daily records from ${startDate} to ${endDate}`;
+}
+
+// Populate the year select dropdown
+function populateYearSelect() {
+    const years = [...new Set(weatherData.map(row => row.year))].sort();
+    const yearSelect = document.getElementById('year-select');
+    
+    years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    });
+}
+
+// Get filtered data based on current selections
+function getFilteredData() {
+    const yearSelect = document.getElementById('year-select');
+    const selectedYear = yearSelect.value;
+    
+    if (selectedYear === 'all') {
+        return [...weatherData];
+    } else {
+        return weatherData.filter(row => row.year === parseInt(selectedYear));
+    }
+}
+
+// Update statistical information
+function updateStats() {
+    const filteredData = getFilteredData();
+    
+    // Calculate statistics
+    const avgTemp = filteredData.reduce((sum, row) => sum + row['Temperature (F)'], 0) / filteredData.length;
+    const avgHumidity = filteredData.reduce((sum, row) => sum + row['Humidity'], 0) / filteredData.length;
+    const avgWindSpeed = filteredData.reduce((sum, row) => sum + row['Wind Speed (mph)'], 0) / filteredData.length;
+    const totalPrecipitation = filteredData.reduce((sum, row) => sum + row['Precipitation (inches)'], 0);
+    const avgPressure = filteredData.reduce((sum, row) => sum + row['Pressure (mb)'], 0) / filteredData.length;
+    
+    // Update the UI
+    document.getElementById('avg-temperature').textContent = avgTemp.toFixed(1);
+    document.getElementById('avg-humidity').textContent = avgHumidity.toFixed(1);
+    document.getElementById('avg-wind-speed').textContent = avgWindSpeed.toFixed(1);
+    document.getElementById('total-precipitation').textContent = totalPrecipitation.toFixed(1);
+    document.getElementById('avg-pressure').textContent = avgPressure.toFixed(1);
+}
+
+// Create the initial charts
+function createCharts() {
+    createMainChart();
+    createMonthlyChart();
+    createYearlyTrendChart();
+    createCorrelationChart();
+    createSeasonalCharts();
+    createExtremeTempChart();
+    createExtremePrecipChart();
+    createTrendCharts();
+}
+
+// Create the main weather metrics chart
+function createMainChart() {
+    const ctx = document.getElementById('main-chart').getContext('2d');
+    
+    const selectedMetric = document.getElementById('metric-select').value;
+    const viewType = document.getElementById('view-select').value;
+    
+    let labels, data;
+    
+    // Process data based on view type
+    switch (viewType) {
+        case 'daily':
+            // For daily view, just show the last 30 days to avoid overcrowding
+            const last30Days = getFilteredData().slice(-30);
+            labels = last30Days.map(row => row.Date);
+            data = last30Days.map(row => getMetricValue(row, selectedMetric));
+            break;
+            
+        case 'monthly':
+        default:
+            // Calculate monthly averages
+            const monthlyData = calculateMonthlyData(getFilteredData(), selectedMetric);
+            labels = monthlyData.labels;
+            data = monthlyData.data;
+            break;
+        
+        case 'seasonal':
+            // Calculate seasonal averages
+            const seasonalData = calculateSeasonalData(getFilteredData(), selectedMetric);
+            labels = seasonalData.labels;
+            data = seasonalData.data;
+            break;
+            
+        case 'yearly':
+            // Calculate yearly averages
+            const yearlyData = calculateYearlyData(getFilteredData(), selectedMetric);
+            labels = yearlyData.labels;
+            data = yearlyData.data;
+            break;
+    }
+    
+    // Create or update the chart
+    if (charts.mainChart) {
+        charts.mainChart.data.labels = labels;
+        charts.mainChart.data.datasets[0].data = data;
+        charts.mainChart.options.scales.y.title.text = getMetricLabel(selectedMetric);
+        charts.mainChart.update();
+    } else {
+        charts.mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: getMetricLabel(selectedMetric),
+                    data: data,
+                    backgroundColor: getMetricColor(selectedMetric, 0.2),
+                    borderColor: getMetricColor(selectedMetric),
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: getTimeLabel(viewType)
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: getMetricLabel(selectedMetric)
+                        },
+                        beginAtZero: selectedMetric === 'precipitation'
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Create the monthly averages chart
+function createMonthlyChart() {
+    const ctx = document.getElementById('monthly-chart').getContext('2d');
+    
+    // Calculate monthly averages for all years
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyData = Array(12).fill(0).map(() => ({ temp: [], humidity: [], precip: [] }));
+    
+    weatherData.forEach(row => {
+        const month = row.dateObj.getMonth();
+        monthlyData[month].temp.push(row['Temperature (F)']);
+        monthlyData[month].humidity.push(row['Humidity']);
+        monthlyData[month].precip.push(row['Precipitation (inches)']);
+    });
+    
+    const avgTempByMonth = monthlyData.map(month => 
+        month.temp.reduce((sum, val) => sum + val, 0) / month.temp.length);
+    
+    const avgHumidityByMonth = monthlyData.map(month => 
+        month.humidity.reduce((sum, val) => sum + val, 0) / month.humidity.length);
+    
+    const avgPrecipByMonth = monthlyData.map(month => 
+        month.precip.reduce((sum, val) => sum + val, 0) / month.precip.length);
+    
+    charts.monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: monthNames,
+            datasets: [
+                {
+                    label: 'Temperature (°F)',
+                    data: avgTempByMonth,
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: avgHumidityByMonth,
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'Precipitation (inches)',
+                    data: avgPrecipByMonth,
+                    type: 'line',
+                    backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.4,
+                    yAxisID: 'y2'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Humidity (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                },
+                y2: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Precipitation (inches)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create yearly trend chart
+function createYearlyTrendChart() {
+    const ctx = document.getElementById('yearly-trend-chart').getContext('2d');
+    
+    // Group data by year
+    const yearlyData = {};
+    weatherData.forEach(row => {
+        const year = row.year;
+        if (!yearlyData[year]) {
+            yearlyData[year] = {
+                temps: [],
+                humidity: [],
+                windSpeed: [],
+                precipitation: 0,
+                pressure: []
+            };
+        }
+        
+        yearlyData[year].temps.push(row['Temperature (F)']);
+        yearlyData[year].humidity.push(row['Humidity']);
+        yearlyData[year].windSpeed.push(row['Wind Speed (mph)']);
+        yearlyData[year].precipitation += row['Precipitation (inches)'];
+        yearlyData[year].pressure.push(row['Pressure (mb)']);
+    });
+    
+    // Calculate yearly averages
+    const years = Object.keys(yearlyData).sort();
+    const avgTemps = years.map(year => 
+        yearlyData[year].temps.reduce((sum, val) => sum + val, 0) / yearlyData[year].temps.length);
+    
+    const totalPrecip = years.map(year => yearlyData[year].precipitation);
+    
+    // Create chart
+    charts.yearlyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Average Temperature (°F)',
+                    data: avgTemps,
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Total Precipitation (inches)',
+                    data: totalPrecip,
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Precipitation (inches)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create correlation chart (scatter plot)
+function createCorrelationChart() {
+    const ctx = document.getElementById('correlation-chart').getContext('2d');
+    
+    // Prepare data for correlation between temperature and humidity
+    const scatterData = weatherData.map(row => ({
+        x: row['Temperature (F)'],
+        y: row['Humidity']
+    }));
+    
+    charts.correlationChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Temperature vs. Humidity',
+                data: scatterData,
+                backgroundColor: 'rgba(46, 204, 113, 0.5)',
+                borderColor: 'rgba(46, 204, 113, 1)',
+                borderWidth: 1,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Temp: ${context.parsed.x.toFixed(1)}°F, Humidity: ${context.parsed.y.toFixed(1)}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Humidity (%)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create seasonal charts
+function createSeasonalCharts() {
+    // Temperature chart by season
+    const tempCtx = document.getElementById('seasonal-temp-chart').getContext('2d');
+    
+    // Define seasons
+    const seasons = {
+        'Winter': [11, 0, 1], // Dec, Jan, Feb
+        'Spring': [2, 3, 4],  // Mar, Apr, May
+        'Summer': [5, 6, 7],  // Jun, Jul, Aug
+        'Fall': [8, 9, 10]    // Sep, Oct, Nov
+    };
+    
+    // Group data by year and season
+    const yearlySeasonalData = {};
+    
+    weatherData.forEach(row => {
+        const year = row.year;
+        const month = row.month;
+        
+        if (!yearlySeasonalData[year]) {
+            yearlySeasonalData[year] = {
+                'Winter': { temps: [], precip: 0 },
+                'Spring': { temps: [], precip: 0 },
+                'Summer': { temps: [], precip: 0 },
+                'Fall': { temps: [], precip: 0 }
+            };
+        }
+        
+        // Determine season
+        Object.entries(seasons).forEach(([season, months]) => {
+            if (months.includes(month)) {
+                yearlySeasonalData[year][season].temps.push(row['Temperature (F)']);
+                yearlySeasonalData[year][season].precip += row['Precipitation (inches)'];
+            }
+        });
+    });
+    
+    // Calculate seasonal averages
+    const years = Object.keys(yearlySeasonalData).sort();
+    const seasonNames = Object.keys(seasons);
+    
+    const seasonalTempData = {};
+    const seasonalPrecipData = {};
+    
+    seasonNames.forEach(season => {
+        seasonalTempData[season] = [];
+        seasonalPrecipData[season] = [];
+        
+        years.forEach(year => {
+            if (yearlySeasonalData[year][season].temps.length > 0) {
+                const avgTemp = yearlySeasonalData[year][season].temps.reduce((sum, val) => sum + val, 0) / 
+                               yearlySeasonalData[year][season].temps.length;
+                seasonalTempData[season].push({
+                    x: year,
+                    y: avgTemp
+                });
+            }
+            
+            seasonalPrecipData[season].push({
+                x: year,
+                y: yearlySeasonalData[year][season].precip
+            });
+        });
+    });
+    
+    // Create temperature chart
+    charts.seasonalTempChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Winter',
+                    data: seasonalTempData['Winter'],
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Spring',
+                    data: seasonalTempData['Spring'],
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Summer',
+                    data: seasonalTempData['Summer'],
+                    backgroundColor: 'rgba(243, 156, 18, 0.2)',
+                    borderColor: 'rgba(243, 156, 18, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Fall',
+                    data: seasonalTempData['Fall'],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Precipitation chart by season
+    const precipCtx = document.getElementById('seasonal-precip-chart').getContext('2d');
+    
+    charts.seasonalPrecipChart = new Chart(precipCtx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Winter',
+                    data: seasonalPrecipData['Winter'],
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Spring',
+                    data: seasonalPrecipData['Spring'],
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Summer',
+                    data: seasonalPrecipData['Summer'],
+                    backgroundColor: 'rgba(243, 156, 18, 0.2)',
+                    borderColor: 'rgba(243, 156, 18, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                {
+                    label: 'Fall',
+                    data: seasonalPrecipData['Fall'],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Precipitation (inches)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create extreme temperature chart
+function createExtremeTempChart() {
+    const ctx = document.getElementById('extreme-temp-chart').getContext('2d');
+    
+    // Group data by year
+    const yearlyExtremes = {};
+    
+    weatherData.forEach(row => {
+        const year = row.year;
+        if (!yearlyExtremes[year]) {
+            yearlyExtremes[year] = {
+                min: Infinity,
+                max: -Infinity
+            };
+        }
+        
+        yearlyExtremes[year].min = Math.min(yearlyExtremes[year].min, row['Temperature (F)']);
+        yearlyExtremes[year].max = Math.max(yearlyExtremes[year].max, row['Temperature (F)']);
+    });
+    
+    const years = Object.keys(yearlyExtremes).sort();
+    const minTemps = years.map(year => yearlyExtremes[year].min);
+    const maxTemps = years.map(year => yearlyExtremes[year].max);
+    
+    charts.extremeTempChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Maximum Temperature (°F)',
+                    data: maxTemps,
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Minimum Temperature (°F)',
+                    data: minTemps,
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create extreme precipitation chart
+function createExtremePrecipChart() {
+    const ctx = document.getElementById('extreme-precip-chart').getContext('2d');
+    
+    // Find top 20 precipitation events
+    const precipEvents = [...weatherData]
+        .filter(row => row['Precipitation (inches)'] > 0)
+        .sort((a, b) => b['Precipitation (inches)'] - a['Precipitation (inches)'])
+        .slice(0, 20);
+    
+    const labels = precipEvents.map(row => row.Date);
+    const data = precipEvents.map(row => row['Precipitation (inches)']);
+    
+    charts.extremePrecipChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Precipitation (inches)',
+                    data: data,
+                    backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    },
+                    ticks: {
+                        maxRotation: 90,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Precipitation (inches)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create trend charts
+function createTrendCharts() {
+    // Temperature trend
+    const tempCtx = document.getElementById('temp-trend-chart').getContext('2d');
+    
+    // Group data by year
+    const yearlyData = {};
+    weatherData.forEach(row => {
+        const year = row.year;
+        if (!yearlyData[year]) {
+            yearlyData[year] = {
+                temps: [],
+                precip: 0
+            };
+        }
+        
+        yearlyData[year].temps.push(row['Temperature (F)']);
+        yearlyData[year].precip += row['Precipitation (inches)'];
+    });
+    
+    // Calculate yearly averages
+    const years = Object.keys(yearlyData).sort();
+    const avgTemps = years.map(year => 
+        yearlyData[year].temps.reduce((sum, val) => sum + val, 0) / yearlyData[year].temps.length);
+    
+    // Calculate trend line
+    const n = years.length;
+    const xVals = years.map(y => parseInt(y));
+    const yVals = avgTemps;
+    
+    // Calculate linear regression
+    const xMean = xVals.reduce((sum, val) => sum + val, 0) / n;
+    const yMean = yVals.reduce((sum, val) => sum + val, 0) / n;
+    
+    let numerator = 0;
+    let denominator = 0;
+    
+    for (let i = 0; i < n; i++) {
+        numerator += (xVals[i] - xMean) * (yVals[i] - yMean);
+        denominator += Math.pow(xVals[i] - xMean, 2);
+    }
+    
+    const slope = numerator / denominator;
+    const intercept = yMean - slope * xMean;
+    
+    const trendData = xVals.map(x => slope * x + intercept);
+    
+    charts.tempTrendChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Average Temperature (°F)',
+                    data: avgTemps,
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 4
+                },
+                {
+                    label: 'Trend Line',
+                    data: trendData,
+                    backgroundColor: 'rgba(44, 62, 80, 0)',
+                    borderColor: 'rgba(44, 62, 80, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°F)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Precipitation trend
+    const precipCtx = document.getElementById('precip-trend-chart').getContext('2d');
+    
+    const totalPrecip = years.map(year => yearlyData[year].precip);
+    
+    // Calculate trend line for precipitation
+    const precipXVals = xVals;
+    const precipYVals = totalPrecip;
+    
+    // Calculate linear regression
+    const precipXMean = precipXVals.reduce((sum, val) => sum + val, 0) / n;
+    const precipYMean = precipYVals.reduce((sum, val) => sum + val, 0) / n;
+    
+    let precipNumerator = 0;
+    let precipDenominator = 0;
+    
+    for (let i = 0; i < n; i++) {
+        precipNumerator += (precipXVals[i] - precipXMean) * (precipYVals[i] - precipYMean);
+        precipDenominator += Math.pow(precipXVals[i] - precipXMean, 2);
+    }
+    
+    const precipSlope = precipNumerator / precipDenominator;
+    const precipIntercept = precipYMean - precipSlope * precipXMean;
+    
+    const precipTrendData = precipXVals.map(x => precipSlope * x + precipIntercept);
+    
+    charts.precipTrendChart = new Chart(precipCtx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Total Precipitation (inches)',
+                    data: totalPrecip,
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 4
+                },
+                {
+                    label: 'Trend Line',
+                    data: precipTrendData,
+                    backgroundColor: 'rgba(44, 62, 80, 0)',
+                    borderColor: 'rgba(44, 62, 80, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Precipitation (inches)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Update charts based on current selections
+function updateCharts() {
+    createMainChart();
+    updateStats();
+}
+
+// Update the seasonal analysis
+function updateSeasonalAnalysis() {
+    // Update season toggles
+    updateSeasonalCharts();
+    
+    // Update seasonal comparisons
+    updateSeasonalComparisons();
+}
+
+// Update seasonal charts based on toggle state
+function updateSeasonalCharts() {
+    const enabledSeasons = [];
+    document.querySelectorAll('.season-toggle:not(.disabled)').forEach(toggle => {
+        enabledSeasons.push(toggle.dataset.season);
+    });
+    
+    // Update temperature chart
+    charts.seasonalTempChart.data.datasets.forEach(dataset => {
+        dataset.hidden = !enabledSeasons.includes(dataset.label);
+    });
+    charts.seasonalTempChart.update();
+    
+    // Update precipitation chart
+    charts.seasonalPrecipChart.data.datasets.forEach(dataset => {
+        dataset.hidden = !enabledSeasons.includes(dataset.label);
+    });
+    charts.seasonalPrecipChart.update();
+}
+
+// Update seasonal comparisons
+function updateSeasonalComparisons() {
+    // Define seasons
+    const seasons = {
+        'Winter': [11, 0, 1], // Dec, Jan, Feb
+        'Spring': [2, 3, 4],  // Mar, Apr, May
+        'Summer': [5, 6, 7],  // Jun, Jul, Aug
+        'Fall': [8, 9, 10]    // Sep, Oct, Nov
+    };
+    
+    // Calculate seasonal averages
+    const seasonalData = {
+        'Winter': { temp: [], humidity: [], wind: [], precip: [], pressure: [] },
+        'Spring': { temp: [], humidity: [], wind: [], precip: [], pressure: [] },
+        'Summer': { temp: [], humidity: [], wind: [], precip: [], pressure: [] },
+        'Fall': { temp: [], humidity: [], wind: [], precip: [], pressure: [] }
+    };
+    
+    weatherData.forEach(row => {
+        const month = row.month;
+        
+        Object.entries(seasons).forEach(([season, months]) => {
+            if (months.includes(month)) {
+                seasonalData[season].temp.push(row['Temperature (F)']);
+                seasonalData[season].humidity.push(row['Humidity']);
+                seasonalData[season].wind.push(row['Wind Speed (mph)']);
+                seasonalData[season].precip.push(row['Precipitation (inches)']);
+                seasonalData[season].pressure.push(row['Pressure (mb)']);
+            }
+        });
+    });
+    
+    // Calculate averages
+    const avgSeasonalData = {};
+    Object.entries(seasonalData).forEach(([season, data]) => {
+        avgSeasonalData[season] = {
+            temp: data.temp.reduce((sum, val) => sum + val, 0) / data.temp.length,
+            humidity: data.humidity.reduce((sum, val) => sum + val, 0) / data.humidity.length,
+            wind: data.wind.reduce((sum, val) => sum + val, 0) / data.wind.length,
+            precip: data.precip.reduce((sum, val) => sum + val, 0) / data.precip.length,
+            pressure: data.pressure.reduce((sum, val) => sum + val, 0) / data.pressure.length
+        };
+    });
+    
+    // Create comparison tables
+    const winterSummerHtml = `
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Metric</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Winter</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Summer</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Difference</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Temperature (°F)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Winter'].temp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Summer'].temp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Summer'].temp - avgSeasonalData['Winter'].temp).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Humidity (%)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Winter'].humidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Summer'].humidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Summer'].humidity - avgSeasonalData['Winter'].humidity).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Wind Speed (mph)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Winter'].wind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Summer'].wind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Summer'].wind - avgSeasonalData['Winter'].wind).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Precipitation (inches)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Winter'].precip.toFixed(4)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Summer'].precip.toFixed(4)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Summer'].precip - avgSeasonalData['Winter'].precip).toFixed(4)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;">Pressure (mb)</td>
+                    <td style="padding: 8px;">${avgSeasonalData['Winter'].pressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${avgSeasonalData['Summer'].pressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${(avgSeasonalData['Summer'].pressure - avgSeasonalData['Winter'].pressure).toFixed(1)}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+    
+    const springFallHtml = `
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Metric</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Spring</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Fall</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Difference</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Temperature (°F)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Spring'].temp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Fall'].temp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Spring'].temp - avgSeasonalData['Fall'].temp).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Humidity (%)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Spring'].humidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Fall'].humidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Spring'].humidity - avgSeasonalData['Fall'].humidity).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Wind Speed (mph)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Spring'].wind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Fall'].wind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Spring'].wind - avgSeasonalData['Fall'].wind).toFixed(1)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Precipitation (inches)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Spring'].precip.toFixed(4)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${avgSeasonalData['Fall'].precip.toFixed(4)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(avgSeasonalData['Spring'].precip - avgSeasonalData['Fall'].precip).toFixed(4)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;">Pressure (mb)</td>
+                    <td style="padding: 8px;">${avgSeasonalData['Spring'].pressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${avgSeasonalData['Fall'].pressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${(avgSeasonalData['Spring'].pressure - avgSeasonalData['Fall'].pressure).toFixed(1)}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+    
+    document.getElementById('winter-summer-comparison').innerHTML = winterSummerHtml;
+    document.getElementById('spring-fall-comparison').innerHTML = springFallHtml;
+}
+
+// Update the climate analysis
+function updateClimateAnalysis() {
+    // Compare first decade (2000-2009) vs second decade (2010-2019)
+    const firstDecade = weatherData.filter(row => row.year >= 2000 && row.year <= 2009);
+    const secondDecade = weatherData.filter(row => row.year >= 2010 && row.year <= 2019);
+    
+    // Calculate decade averages
+    const firstDecadeTemp = firstDecade.reduce((sum, row) => sum + row['Temperature (F)'], 0) / firstDecade.length;
+    const secondDecadeTemp = secondDecade.reduce((sum, row) => sum + row['Temperature (F)'], 0) / secondDecade.length;
+    
+    const firstDecadeHumidity = firstDecade.reduce((sum, row) => sum + row['Humidity'], 0) / firstDecade.length;
+    const secondDecadeHumidity = secondDecade.reduce((sum, row) => sum + row['Humidity'], 0) / secondDecade.length;
+    
+    const firstDecadeWind = firstDecade.reduce((sum, row) => sum + row['Wind Speed (mph)'], 0) / firstDecade.length;
+    const secondDecadeWind = secondDecade.reduce((sum, row) => sum + row['Wind Speed (mph)'], 0) / secondDecade.length;
+    
+    const firstDecadePrecip = firstDecade.reduce((sum, row) => sum + row['Precipitation (inches)'], 0);
+    const secondDecadePrecip = secondDecade.reduce((sum, row) => sum + row['Precipitation (inches)'], 0);
+    
+    const firstDecadePressure = firstDecade.reduce((sum, row) => sum + row['Pressure (mb)'], 0) / firstDecade.length;
+    const secondDecadePressure = secondDecade.reduce((sum, row) => sum + row['Pressure (mb)'], 0) / secondDecade.length;
+    
+    // Create comparison table
+    const decadeComparisonHtml = `
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Metric</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">2000-2009</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">2010-2019</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Change</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd;">Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Average Temperature (°F)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${firstDecadeTemp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${secondDecadeTemp.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(secondDecadeTemp - firstDecadeTemp).toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                        ${secondDecadeTemp > firstDecadeTemp ? 
+                        '<span class="trend-indicator trend-up">+' + (secondDecadeTemp - firstDecadeTemp).toFixed(1) + '°F</span>' : 
+                        '<span class="trend-indicator trend-down">-' + (firstDecadeTemp - secondDecadeTemp).toFixed(1) + '°F</span>'}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Average Humidity (%)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${firstDecadeHumidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${secondDecadeHumidity.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(secondDecadeHumidity - firstDecadeHumidity).toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                        ${secondDecadeHumidity > firstDecadeHumidity ? 
+                        '<span class="trend-indicator trend-up">+' + (secondDecadeHumidity - firstDecadeHumidity).toFixed(1) + '%</span>' : 
+                        '<span class="trend-indicator trend-down">-' + (firstDecadeHumidity - secondDecadeHumidity).toFixed(1) + '%</span>'}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Average Wind Speed (mph)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${firstDecadeWind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${secondDecadeWind.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(secondDecadeWind - firstDecadeWind).toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                        ${secondDecadeWind > firstDecadeWind ? 
+                        '<span class="trend-indicator trend-up">+' + (secondDecadeWind - firstDecadeWind).toFixed(1) + ' mph</span>' : 
+                        '<span class="trend-indicator trend-down">-' + (firstDecadeWind - secondDecadeWind).toFixed(1) + ' mph</span>'}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Precipitation (inches)</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${firstDecadePrecip.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${secondDecadePrecip.toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${(secondDecadePrecip - firstDecadePrecip).toFixed(1)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                        ${secondDecadePrecip > firstDecadePrecip ? 
+                        '<span class="trend-indicator trend-up">+' + (secondDecadePrecip - firstDecadePrecip).toFixed(1) + ' in</span>' : 
+                        '<span class="trend-indicator trend-down">-' + (firstDecadePrecip - secondDecadePrecip).toFixed(1) + ' in</span>'}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;">Average Pressure (mb)</td>
+                    <td style="padding: 8px;">${firstDecadePressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${secondDecadePressure.toFixed(1)}</td>
+                    <td style="padding: 8px;">${(secondDecadePressure - firstDecadePressure).toFixed(1)}</td>
+                    <td style="padding: 8px;">
+                        ${secondDecadePressure > firstDecadePressure ? 
+                        '<span class="trend-indicator trend-up">+' + (secondDecadePressure - firstDecadePressure).toFixed(1) + ' mb</span>' : 
+                        '<span class="trend-indicator trend-down">-' + (firstDecadePressure - secondDecadePressure).toFixed(1) + ' mb</span>'}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2c3e50; font-style: italic;">
+            <p><strong>Analysis:</strong> Comparing the two decades shows ${
+                secondDecadeTemp > firstDecadeTemp ? 
+                'a warming trend of about ' + (secondDecadeTemp - firstDecadeTemp).toFixed(1) + '°F' : 
+                'a cooling trend of about ' + (firstDecadeTemp - secondDecadeTemp).toFixed(1) + '°F'
+            } in average temperature. Precipitation has ${
+                secondDecadePrecip > firstDecadePrecip ? 
+                'increased by about ' + (secondDecadePrecip - firstDecadePrecip).toFixed(1) + ' inches' : 
+                'decreased by about ' + (firstDecadePrecip - secondDecadePrecip).toFixed(1) + ' inches'
+            } in total over the decade. Wind speeds have ${
+                secondDecadeWind > firstDecadeWind ? 
+                'increased slightly' : 
+                'decreased'
+            }, and humidity has ${
+                secondDecadeHumidity > firstDecadeHumidity ? 
+                'increased' : 
+                'decreased'
+            }.</p>
+        </div>
+    `;
+    
+    document.getElementById('decade-comparison').innerHTML = decadeComparisonHtml;
+}
+
+// Display extreme weather events
+function displayExtremeEvents() {
+    // Find extreme values
+    let hottestDay = { temp: -Infinity, date: '' };
+    let coldestDay = { temp: Infinity, date: '' };
+    let windiestDay = { speed: -Infinity, date: '' };
+    let wettestDay = { amount: -Infinity, date: '' };
+    
+    weatherData.forEach(row => {
+        if (row['Temperature (F)'] > hottestDay.temp) {
+            hottestDay.temp = row['Temperature (F)'];
+            hottestDay.date = row.Date;
+        }
+        
+        if (row['Temperature (F)'] < coldestDay.temp) {
+            coldestDay.temp = row['Temperature (F)'];
+            coldestDay.date = row.Date;
+        }
+        
+        if (row['Wind Speed (mph)'] > windiestDay.speed) {
+            windiestDay.speed = row['Wind Speed (mph)'];
+            windiestDay.date = row.Date;
+        }
+        
+        if (row['Precipitation (inches)'] > wettestDay.amount) {
+            wettestDay.amount = row['Precipitation (inches)'];
+            wettestDay.date = row.Date;
+        }
+    });
+    
+    // Format dates
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+    
+    // Update UI
+    document.getElementById('hottest-date').textContent = formatDate(hottestDay.date);
+    document.getElementById('hottest-value').textContent = `${hottestDay.temp.toFixed(1)}°F`;
+    
+    document.getElementById('coldest-date').textContent = formatDate(coldestDay.date);
+    document.getElementById('coldest-value').textContent = `${coldestDay.temp.toFixed(1)}°F`;
+    
+    document.getElementById('windiest-date').textContent = formatDate(windiestDay.date);
+    document.getElementById('windiest-value').textContent = `${windiestDay.speed.toFixed(1)} mph`;
+    
+    document.getElementById('wettest-date').textContent = formatDate(wettestDay.date);
+    document.getElementById('wettest-value').textContent = `${wettestDay.amount.toFixed(2)} inches`;
+}
+
+// Update the data table
+function updateTable() {
+    const filteredData = getFilteredData();
+    const tableBody = document.getElementById('table-body');
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
+    const maxPage = Math.ceil(filteredData.length / rowsPerPage);
+    
+    // Update page info
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${maxPage}`;
+    
+    // Enable/disable pagination buttons
+    document.getElementById('prev-page-btn').disabled = currentPage === 1;
+    document.getElementById('next-page-btn').disabled = currentPage === maxPage;
+    
+    // Add rows for current page
+    for (let i = startIndex; i < endIndex; i++) {
+        const row = filteredData[i];
+        const tr = document.createElement('tr');
+        
+        // Format date
+        const date = new Date(row.Date);
+        const formattedDate = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        tr.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${row['Temperature (F)'].toFixed(1)}</td>
+            <td>${row['Humidity'].toFixed(1)}</td>
+            <td>${row['Wind Speed (mph)'].toFixed(1)}</td>
+            <td>${row['Precipitation (inches)'].toFixed(3)}</td>
+            <td>${row['Pressure (mb)'].toFixed(1)}</td>
+        `;
+        
+        tableBody.appendChild(tr);
+    }
+}
+
+// Calculate monthly data
+function calculateMonthlyData(data, metric) {
+    // Group by year and month
+    const monthlyData = {};
+    
+    data.forEach(row => {
+        const year = row.year;
+        const month = row.month;
+        const key = `${year}-${month.toString().padStart(2, '0')}`;
+        
+        if (!monthlyData[key]) {
+            monthlyData[key] = [];
+        }
+        
+        monthlyData[key].push(getMetricValue(row, metric));
+    });
+    
+    // Calculate averages
+    const monthlyAverages = {};
+    Object.entries(monthlyData).forEach(([key, values]) => {
+        monthlyAverages[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
+    });
+    
+    // Sort by date
+    const sortedKeys = Object.keys(monthlyAverages).sort();
+    
+    // Format labels
+    const formatMonthYear = (key) => {
+        const [year, month] = key.split('-');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${monthNames[parseInt(month)]} ${year}`;
+    };
+    
+    return {
+        labels: sortedKeys.map(formatMonthYear),
+        data: sortedKeys.map(key => monthlyAverages[key])
+    };
+}
+
+// Calculate seasonal data
+function calculateSeasonalData(data, metric) {
+    // Define seasons
+    const seasons = {
+        'Winter': [11, 0, 1], // Dec, Jan, Feb
+        'Spring': [2, 3, 4],  // Mar, Apr, May
+        'Summer': [5, 6, 7],  // Jun, Jul, Aug
+        'Fall': [8, 9, 10]    // Sep, Oct, Nov
+    };
+    
+    // Group by year and season
+    const seasonalData = {};
+    
+    data.forEach(row => {
+        const year = row.year;
+        const month = row.month;
+        
+        // Determine season
+        Object.entries(seasons).forEach(([season, months]) => {
+            if (months.includes(month)) {
+                const key = `${year}-${season}`;
+                
+                if (!seasonalData[key]) {
+                    seasonalData[key] = [];
+                }
+                
+                seasonalData[key].push(getMetricValue(row, metric));
+            }
+        });
+    });
+    
+    // Calculate averages
+    const seasonalAverages = {};
+    Object.entries(seasonalData).forEach(([key, values]) => {
+        seasonalAverages[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
+    });
+    
+    // Sort by date
+    const sortedKeys = Object.keys(seasonalAverages).sort();
+    
+    return {
+        labels: sortedKeys,
+        data: sortedKeys.map(key => seasonalAverages[key])
+    };
+}
+
+// Calculate yearly data
+function calculateYearlyData(data, metric) {
+    // Group by year
+    const yearlyData = {};
+    
+    data.forEach(row => {
+        const year = row.year;
+        
+        if (!yearlyData[year]) {
+            yearlyData[year] = [];
+        }
+        
+        yearlyData[year].push(getMetricValue(row, metric));
+    });
+    
+    // Calculate averages
+    const yearlyAverages = {};
+    Object.entries(yearlyData).forEach(([year, values]) => {
+        yearlyAverages[year] = values.reduce((sum, val) => sum + val, 0) / values.length;
+    });
+    
+    // Sort by year
+    const sortedYears = Object.keys(yearlyAverages).sort();
+    
+    return {
+        labels: sortedYears,
+        data: sortedYears.map(year => yearlyAverages[year])
+    };
+}
+
+// Get metric value based on selected metric
+function getMetricValue(row, metric) {
+    switch (metric) {
+        case 'temperature':
+            return row['Temperature (F)'];
+        case 'humidity':
+            return row['Humidity'];
+        case 'wind-speed':
+            return row['Wind Speed (mph)'];
+        case 'precipitation':
+            return row['Precipitation (inches)'];
+        case 'pressure':
+            return row['Pressure (mb)'];
+        default:
+            return row['Temperature (F)'];
+    }
+}
+
+// Get metric label based on selected metric
+function getMetricLabel(metric) {
+    switch (metric) {
+        case 'temperature':
+            return 'Temperature (°F)';
+        case 'humidity':
+            return 'Humidity (%)';
+        case 'wind-speed':
+            return 'Wind Speed (mph)';
+        case 'precipitation':
+            return 'Precipitation (inches)';
+        case 'pressure':
+            return 'Pressure (mb)';
+        default:
+            return 'Temperature (°F)';
+    }
+}
+
+// Get metric color based on selected metric
+function getMetricColor(metric, alpha = 1) {
+    switch (metric) {
+        case 'temperature':
+            return `rgba(231, 76, 60, ${alpha})`;
+        case 'humidity':
+            return `rgba(52, 152, 219, ${alpha})`;
+        case 'wind-speed':
+            return `rgba(46, 204, 113, ${alpha})`;
+        case 'precipitation':
+            return `rgba(155, 89, 182, ${alpha})`;
+        case 'pressure':
+            return `rgba(243, 156, 18, ${alpha})`;
+        default:
+            return `rgba(231, 76, 60, ${alpha})`;
+    }
+}
+
+// Get time label based on view type
+function getTimeLabel(viewType) {
+    switch (viewType) {
+        case 'daily':
+            return 'Date';
+        case 'monthly':
+            return 'Month';
+        case 'seasonal':
+            return 'Season';
+        case 'yearly':
+            return 'Year';
+        default:
+            return 'Date';
+    }
+}
+    </script>
+
+</body>
+</html>
