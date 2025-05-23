@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Response Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .container h1 {
+            -webkit-text-fill-color: transparent;
+        }
+
+        header h1 {
+            color: white;
+            
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .method-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            align-items: end;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .console-section {
+            margin: 30px 0;
+            padding: 20px 0;
+            border-top: 2px solid #e1e1e1;
+        }
+
+        .console-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .console-box {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            border: 2px solid #333;
+            margin-bottom: 10px;
+        }
+
+        .console-line {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .console-line.error {
+            color: #ff4444;
+        }
+
+        .console-line.warning {
+            color: #ffaa00;
+        }
+
+        .console-line.info {
+            color: #44aaff;
+        }
+
+        .console-line.success {
+            color: #44ff44;
+        }
+
+        .clear-console-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            width: auto;
+            margin-top: 0;
+        }
+
+        .clear-console-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .response-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e1e1e1;
+        }
+
+        .response-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-card .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .info-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .response-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .download-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filename-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .status.error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .status.loading {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .method-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .download-section {
+                flex-direction: column;
+            }
+            
+            .download-btn, .filename-input {
+                min-width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <header>
+        <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
+        <h1>Assorted Projects</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="fractal.html">Fractal Canvas</a></li>
+            <li><a href="complex.html">Complex Graphing</a></li>
+            <li><a href="vector.html">Vector Calculator</a></li>
+            <li><a href="qr.html">QR Code Generator</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>🚀 API Response Downloader</h1>
+
+        <div class="method-group">
+            <div class="form-group">
+                <label for="method">HTTP Method:</label>
+                <select id="method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="url">API URL:</label>
+                <input type="url" id="url" placeholder="https://api.example.com/data">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="corsProxy">🛡️ CORS Proxy (to bypass CORS restrictions):</label>
+            <select id="corsProxy">
+                <option value="">No proxy (direct request)</option>
+                <option value="https://api.allorigins.win/raw?url=">AllOrigins Proxy</option>
+                <option value="https://corsproxy.io/?">CorsProxy.io</option>
+                <option value="https://cors-anywhere.herokuapp.com/">CORS Anywhere (may be limited)</option>
+            </select>
+            <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                ⚠️ Use proxies only for testing. For production, enable CORS on your API server.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="apiKey">API Key (optional):</label>
+            <input type="password" id="apiKey" placeholder="Enter your API key">
+        </div>
+
+        <div class="form-group">
+            <label for="headers">Additional Headers (JSON format, optional):</label>
+            <textarea id="headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+        </div>
+
+        <div class="form-group" id="bodyGroup" style="display: none;">
+            <label for="body">Request Body (JSON format):</label>
+            <textarea id="body" placeholder='{"key": "value"}'></textarea>
+        </div>
+
+        <button type="button" id="fetchBtn" onclick="fetchData()">🔄 Fetch Data</button>
+
+        <div class="console-section">
+            <h3>🖥️ Console Output</h3>
+            <div class="console-box" id="consoleBox">
+                <div class="console-line">🟢 System ready - click button to test!</div>
+            </div>
+            <button type="button" class="clear-console-btn" onclick="clearConsole()">🗑️ Clear Console</button>
+        </div>
+
+        <div class="response-section" id="responseSection" style="display: none;">
+            <h2>📊 Response Details</h2>
+            
+            <div class="response-info">
+                <div class="info-card">
+                    <div class="label">Status Code</div>
+                    <div class="value" id="statusCode">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Content Type</div>
+                    <div class="value" id="contentType">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Response Size</div>
+                    <div class="value" id="responseSize">-</div>
+                </div>
+            </div>
+
+            <h3>📋 Response Preview</h3>
+            <div class="response-preview" id="responsePreview"></div>
+
+            <h3>💾 Download Your Data</h3>
+            <div class="download-section">
+                <input type="text" id="filename" class="filename-input" placeholder="Enter filename (e.g., data.json)" value="response.json">
+                <button type="button" class="download-btn" onclick="downloadFile()">⬇️ Download Response as File</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Assorted Projects. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Global variables
+        let responseData = null;
+        let responseHeaders = null;
+
+        // Console logging functions
+        function logToConsole(message, type = 'info') {
+            const consoleBox = document.getElementById('consoleBox');
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `[${timestamp}] ${message}`;
+            consoleBox.appendChild(line);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleBox').innerHTML = '<div class="console-line">Console cleared.</div>';
+        }
+
+        // Show/hide body input based on method
+        document.getElementById('method').addEventListener('change', function() {
+            const method = this.value;
+            const bodyGroup = document.getElementById('bodyGroup');
+            bodyGroup.style.display = ['POST', 'PUT'].includes(method) ? 'block' : 'none';
+            logToConsole(`Method changed to: ${method}`, 'info');
+        });
+
+        // Main fetch function
+        async function fetchData() {
+            logToConsole('🔄 Button clicked! Starting API request...', 'info');
+            
+            const method = document.getElementById('method').value;
+            const url = document.getElementById('url').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const headersText = document.getElementById('headers').value.trim();
+            const bodyText = document.getElementById('body').value.trim();
+            const fetchBtn = document.getElementById('fetchBtn');
+
+            // Validate URL
+            if (!url) {
+                logToConsole('❌ Error: Please enter an API URL', 'error');
+                alert('Please enter an API URL');
+                return;
+            }
+
+            try {
+                // Disable button and show loading
+                fetchBtn.disabled = true;
+                fetchBtn.textContent = '⏳ Fetching...';
+                logToConsole(`🌐 Making ${method} request to: ${url}`, 'info');
+
+                // Prepare headers
+                const headers = {};
+                
+                if (apiKey) {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                    headers['X-API-Key'] = apiKey;
+                    logToConsole('🔑 API key added to headers', 'info');
+                }
+
+                // Parse additional headers
+                if (headersText) {
+                    try {
+                        const additionalHeaders = JSON.parse(headersText);
+                        Object.assign(headers, additionalHeaders);
+                        logToConsole('📋 Custom headers added', 'info');
+                    } catch (e) {
+                        throw new Error('Invalid JSON in headers field: ' + e.message);
+                    }
+                }
+
+                // Prepare request options
+                const options = {
+                    method: method,
+                    headers: headers,
+                    mode: 'cors'
+                };
+
+                // Add body for POST/PUT requests
+                if (['POST', 'PUT'].includes(method) && bodyText) {
+                    try {
+                        JSON.parse(bodyText); // Validate JSON
+                        options.body = bodyText;
+                        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+                        logToConsole('📄 Request body added', 'info');
+                    } catch (e) {
+                        throw new Error('Invalid JSON in request body: ' + e.message);
+                    }
+                }
+
+                logToConsole('📡 Sending request...', 'info');
+                
+                // Make the API request
+                const response = await fetch(url, options);
+                responseHeaders = response.headers;
+
+                logToConsole(`📥 Response received! Status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                // Get response text
+                const responseText = await response.text();
+                responseData = responseText;
+
+                if (!response.ok) {
+                    logToConsole(`❌ API returned error status: ${response.status}`, 'error');
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                logToConsole(`✅ Success! Received ${responseText.length} characters`, 'success');
+                
+                // Display response details
+                displayResponse(response, responseText);
+
+            } catch (error) {
+                logToConsole(`❌ Request failed: ${error.message}`, 'error');
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    logToConsole('🚫 This might be a CORS issue - API may not allow browser requests', 'warning');
+                }
+                
+                document.getElementById('responseSection').style.display = 'none';
+            } finally {
+                // Re-enable button
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = '🔄 Fetch Data';
+                logToConsole('🏁 Request completed', 'info');
+            }
+        }
+
+        // Display response function
+        function displayResponse(response, responseText) {
+            // Update response info
+            document.getElementById('statusCode').textContent = response.status;
+            document.getElementById('contentType').textContent = response.headers.get('content-type') || 'Unknown';
+            document.getElementById('responseSize').textContent = formatBytes(responseText.length);
+
+            // Show response preview
+            const preview = document.getElementById('responsePreview');
+            try {
+                // Try to format as JSON if possible
+                const jsonData = JSON.parse(responseText);
+                preview.textContent = JSON.stringify(jsonData, null, 2);
+            } catch (e) {
+                // If not JSON, show as text
+                preview.textContent = responseText.substring(0, 2000) + (responseText.length > 2000 ? '\n...(truncated)' : '');
+            }
+
+            // Suggest filename based on content type
+            const contentType = response.headers.get('content-type') || '';
+            let suggestedExt = 'txt';
+            if (contentType.includes('json')) suggestedExt = 'json';
+            else if (contentType.includes('xml')) suggestedExt = 'xml';
+            else if (contentType.includes('csv')) suggestedExt = 'csv';
+            else if (contentType.includes('html')) suggestedExt = 'html';
+
+            document.getElementById('filename').value = `response.${suggestedExt}`;
+
+            // Show response section
+            document.getElementById('responseSection').style.display = 'block';
+            logToConsole('📊 Response data displayed and ready for download', 'success');
+        }
+
+        // Download function
+        function downloadFile() {
+            logToConsole('💾 Download button clicked', 'info');
+            
+            if (!responseData) {
+                logToConsole('❌ No response data available to download', 'error');
+                alert('No data to download. Please fetch data first!');
+                return;
+            }
+
+            const filename = document.getElementById('filename').value || 'response.txt';
+            const contentType = responseHeaders?.get('content-type') || 'text/plain';
+            
+            try {
+                const blob = new Blob([responseData], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                logToConsole(`✅ File downloaded: ${filename} (${formatBytes(responseData.length)})`, 'success');
+            } catch (error) {
+                logToConsole(`❌ Download failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper function to format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Initialize on page load
+        logToConsole('🚀 API Downloader loaded successfully!', 'success');
+        logToConsole('💡 Try these CORS-friendly test URLs:', 'info');
+        logToConsole('   • https://httpbin.org/json (always works)', 'info');
+        logToConsole('   • https://api.github.com/users/octocat (GitHub API)', 'info');
+        logToConsole('   • Or use a CORS proxy with any API!', 'info');
+    </script>
+</body>
+</html>
