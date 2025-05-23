@@ -21,7 +21,7 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
@@ -33,13 +33,10 @@
             margin-bottom: 30px;
             color: #333;
             font-size: 2.5em;
-            -webkit-background-clip: text;
             background-clip: text;
         }
 
-        .container h1 {
-            -webkit-text-fill-color: transparent;
-        }
+        
 
         header h1 {
             color: white;
@@ -294,7 +291,7 @@
         </ul>
     </nav>
     <div class="container">
-        <h1>🚀 API Response Downloader</h1>
+        <h1>API Response Downloader</h1>
 
         <div class="method-group">
             <div class="form-group">
@@ -314,7 +311,7 @@
         </div>
 
         <div class="form-group">
-            <label for="corsProxy">🛡️ CORS Proxy (to bypass CORS restrictions):</label>
+            <label for="corsProxy">CORS Proxy (to bypass CORS restrictions):</label>
             <select id="corsProxy">
                 <option value="">No proxy (direct request)</option>
                 <option value="https://api.allorigins.win/raw?url=">AllOrigins Proxy</option>
@@ -322,7 +319,7 @@
                 <option value="https://cors-anywhere.herokuapp.com/">CORS Anywhere (may be limited)</option>
             </select>
             <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
-                ⚠️ Use proxies only for testing. For production, enable CORS on your API server.
+                Use proxies only for testing. For production, enable CORS on your API server.
             </small>
         </div>
 
@@ -341,18 +338,18 @@
             <textarea id="body" placeholder='{"key": "value"}'></textarea>
         </div>
 
-        <button type="button" id="fetchBtn" onclick="fetchData()">🔄 Fetch Data</button>
+        <button type="button" id="fetchBtn" onclick="fetchData()">Fetch Data</button>
 
         <div class="console-section">
-            <h3>🖥️ Console Output</h3>
+            <h3>Console Output</h3>
             <div class="console-box" id="consoleBox">
-                <div class="console-line">🟢 System ready - click button to test!</div>
+                <div class="console-line">System ready - click button to test!</div>
             </div>
-            <button type="button" class="clear-console-btn" onclick="clearConsole()">🗑️ Clear Console</button>
+            <button type="button" class="clear-console-btn" onclick="clearConsole()">Clear Console</button>
         </div>
 
         <div class="response-section" id="responseSection" style="display: none;">
-            <h2>📊 Response Details</h2>
+            <h2>Response Details</h2>
             
             <div class="response-info">
                 <div class="info-card">
@@ -369,13 +366,13 @@
                 </div>
             </div>
 
-            <h3>📋 Response Preview</h3>
+            <h3>Response Preview</h3>
             <div class="response-preview" id="responsePreview"></div>
 
-            <h3>💾 Download Your Data</h3>
+            <h3>Download Your Data</h3>
             <div class="download-section">
                 <input type="text" id="filename" class="filename-input" placeholder="Enter filename (e.g., data.json)" value="response.json">
-                <button type="button" class="download-btn" onclick="downloadFile()">⬇️ Download Response as File</button>
+                <button type="button" class="download-btn" onclick="downloadFile()">Download Response as File</button>
             </div>
         </div>
     </div>
@@ -413,7 +410,7 @@
 
         // Main fetch function
         async function fetchData() {
-            logToConsole('🔄 Button clicked! Starting API request...', 'info');
+            logToConsole('Button clicked! Starting API request...', 'info');
             
             const method = document.getElementById('method').value;
             const url = document.getElementById('url').value.trim();
@@ -424,7 +421,7 @@
 
             // Validate URL
             if (!url) {
-                logToConsole('❌ Error: Please enter an API URL', 'error');
+                logToConsole('Error: Please enter an API URL', 'error');
                 alert('Please enter an API URL');
                 return;
             }
@@ -432,8 +429,8 @@
             try {
                 // Disable button and show loading
                 fetchBtn.disabled = true;
-                fetchBtn.textContent = '⏳ Fetching...';
-                logToConsole(`🌐 Making ${method} request to: ${url}`, 'info');
+                fetchBtn.textContent = 'Fetching...';
+                logToConsole(`Making ${method} request to: ${url}`, 'info');
 
                 // Prepare headers
                 const headers = {};
@@ -441,7 +438,7 @@
                 if (apiKey) {
                     headers['Authorization'] = `Bearer ${apiKey}`;
                     headers['X-API-Key'] = apiKey;
-                    logToConsole('🔑 API key added to headers', 'info');
+                    logToConsole('API key added to headers', 'info');
                 }
 
                 // Parse additional headers
@@ -449,7 +446,7 @@
                     try {
                         const additionalHeaders = JSON.parse(headersText);
                         Object.assign(headers, additionalHeaders);
-                        logToConsole('📋 Custom headers added', 'info');
+                        logToConsole('Custom headers added', 'info');
                     } catch (e) {
                         throw new Error('Invalid JSON in headers field: ' + e.message);
                     }
@@ -468,47 +465,47 @@
                         JSON.parse(bodyText); // Validate JSON
                         options.body = bodyText;
                         headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-                        logToConsole('📄 Request body added', 'info');
+                        logToConsole('Request body added', 'info');
                     } catch (e) {
                         throw new Error('Invalid JSON in request body: ' + e.message);
                     }
                 }
 
-                logToConsole('📡 Sending request...', 'info');
+                logToConsole('Sending request...', 'info');
                 
                 // Make the API request
                 const response = await fetch(url, options);
                 responseHeaders = response.headers;
 
-                logToConsole(`📥 Response received! Status: ${response.status}`, response.ok ? 'success' : 'error');
+                logToConsole(`Response received! Status: ${response.status}`, response.ok ? 'success' : 'error');
 
                 // Get response text
                 const responseText = await response.text();
                 responseData = responseText;
 
                 if (!response.ok) {
-                    logToConsole(`❌ API returned error status: ${response.status}`, 'error');
+                    logToConsole(`API returned error status: ${response.status}`, 'error');
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                logToConsole(`✅ Success! Received ${responseText.length} characters`, 'success');
+                logToConsole(`Success! Received ${responseText.length} characters`, 'success');
                 
                 // Display response details
                 displayResponse(response, responseText);
 
             } catch (error) {
-                logToConsole(`❌ Request failed: ${error.message}`, 'error');
+                logToConsole(`Request failed: ${error.message}`, 'error');
                 
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    logToConsole('🚫 This might be a CORS issue - API may not allow browser requests', 'warning');
+                    logToConsole('This might be a CORS issue - API may not allow browser requests', 'warning');
                 }
                 
                 document.getElementById('responseSection').style.display = 'none';
             } finally {
                 // Re-enable button
                 fetchBtn.disabled = false;
-                fetchBtn.textContent = '🔄 Fetch Data';
-                logToConsole('🏁 Request completed', 'info');
+                fetchBtn.textContent = 'Fetch Data';
+                logToConsole('Request completed', 'info');
             }
         }
 
@@ -542,15 +539,15 @@
 
             // Show response section
             document.getElementById('responseSection').style.display = 'block';
-            logToConsole('📊 Response data displayed and ready for download', 'success');
+            logToConsole('Response data displayed and ready for download', 'success');
         }
 
         // Download function
         function downloadFile() {
-            logToConsole('💾 Download button clicked', 'info');
+            logToConsole('Download button clicked', 'info');
             
             if (!responseData) {
-                logToConsole('❌ No response data available to download', 'error');
+                logToConsole('No response data available to download', 'error');
                 alert('No data to download. Please fetch data first!');
                 return;
             }
@@ -571,9 +568,9 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
-                logToConsole(`✅ File downloaded: ${filename} (${formatBytes(responseData.length)})`, 'success');
+                logToConsole(`File downloaded: ${filename} (${formatBytes(responseData.length)})`, 'success');
             } catch (error) {
-                logToConsole(`❌ Download failed: ${error.message}`, 'error');
+                logToConsole(`Download failed: ${error.message}`, 'error');
             }
         }
 
@@ -587,8 +584,8 @@
         }
 
         // Initialize on page load
-        logToConsole('🚀 API Downloader loaded successfully!', 'success');
-        logToConsole('💡 Try these CORS-friendly test URLs:', 'info');
+        logToConsole('   API Downloader loaded successfully!', 'success');
+        logToConsole('   Try these CORS-friendly test URLs:', 'info');
         logToConsole('   • https://httpbin.org/json (always works)', 'info');
         logToConsole('   • https://api.github.com/users/octocat (GitHub API)', 'info');
         logToConsole('   • Or use a CORS proxy with any API!', 'info');
