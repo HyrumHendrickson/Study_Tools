@@ -91,11 +91,73 @@
     initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` }).then(SQL => {
       db = new SQL.Database();
       db.run(
-        "CREATE TABLE students (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, grade INTEGER);" +
-        "INSERT INTO students VALUES ('Alice', 90);" +
-        "INSERT INTO students VALUES ('Bob', 85);" +
-        "INSERT INTO students VALUES ('Charlie', 88);"
-      );
+  "CREATE TABLE teachers (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT NOT NULL, last_name TEXT NOT NULL, subject TEXT NOT NULL);" +
+  "CREATE TABLE majors (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, head_teacher_id INTEGER, FOREIGN KEY (head_teacher_id) REFERENCES teachers(id));" +
+  "CREATE TABLE students (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT NOT NULL, last_name TEXT NOT NULL, age INTEGER NOT NULL, major_id INTEGER, FOREIGN KEY (major_id) REFERENCES majors(id));" +
+  "CREATE TABLE classes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, teacher_id INTEGER, FOREIGN KEY (teacher_id) REFERENCES teachers(id));" +
+  "CREATE TABLE student_classes (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, class_id INTEGER, grade INTEGER, FOREIGN KEY (student_id) REFERENCES students(id), FOREIGN KEY (class_id) REFERENCES classes(id));" +
+
+  "INSERT INTO teachers (first_name, last_name, subject) VALUES " +
+  "('Alice', 'Smith', 'Math')," +
+  "('Bob', 'Johnson', 'Physics')," +
+  "('Carol', 'Williams', 'Chemistry')," +
+  "('David', 'Brown', 'Biology')," +
+  "('Eva', 'Jones', 'History')," +
+  "('Frank', 'Garcia', 'Literature')," +
+  "('Grace', 'Martinez', 'Geography')," +
+  "('Henry', 'Davis', 'Philosophy')," +
+  "('Ivy', 'Rodriguez', 'Economics')," +
+  "('Jack', 'Lopez', 'Computer Science');" +
+
+  "INSERT INTO majors (name, head_teacher_id) VALUES " +
+  "('Mathematics', 1)," +
+  "('Physics', 2)," +
+  "('Chemistry', 3)," +
+  "('Biology', 4)," +
+  "('History', 5)," +
+  "('Literature', 6)," +
+  "('Geography', 7)," +
+  "('Philosophy', 8)," +
+  "('Economics', 9)," +
+  "('Computer Science', 10);" +
+
+  "INSERT INTO students (first_name, last_name, age, major_id) VALUES " +
+  "('Tom', 'Green', 20, 1)," +
+  "('Sara', 'White', 21, 2)," +
+  "('Liam', 'Hall', 19, 3)," +
+  "('Emma', 'Allen', 22, 4)," +
+  "('Noah', 'Young', 20, 5)," +
+  "('Olivia', 'Hernandez', 21, 6)," +
+  "('James', 'King', 23, 7)," +
+  "('Ava', 'Wright', 22, 8)," +
+  "('William', 'Scott', 20, 9)," +
+  "('Isabella', 'Torres', 21, 10);" +
+
+  "INSERT INTO classes (name, teacher_id) VALUES " +
+  "('Algebra', 1)," +
+  "('Mechanics', 2)," +
+  "('Organic Chemistry', 3)," +
+  "('Genetics', 4)," +
+  "('World History', 5)," +
+  "('Poetry', 6)," +
+  "('Cartography', 7)," +
+  "('Ethics', 8)," +
+  "('Microeconomics', 9)," +
+  "('Programming 101', 10);" +
+
+  "INSERT INTO student_classes (student_id, class_id, grade) VALUES " +
+  "(1, 1, 88)," +
+  "(2, 2, 92)," +
+  "(3, 3, 85)," +
+  "(4, 4, 90)," +
+  "(5, 5, 78)," +
+  "(6, 6, 84)," +
+  "(7, 7, 80)," +
+  "(8, 8, 89)," +
+  "(9, 9, 91)," +
+  "(10, 10, 87);"
+);
+
     });
 
     function runQuery() {
