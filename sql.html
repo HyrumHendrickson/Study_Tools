@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLite Query Tester</title>
+  <link rel="icon" href="logo.jpg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+  <style>
+    .sql-card {
+      width: 100% !important;         /* override default card width */
+      max-width: 1000px;              /* control readability */
+      margin: 2rem auto;              /* center horizontally */
+      text-align: left;
+      padding: 2rem;
+    }
+
+    .sql-card h2 {
+      text-align: center;
+    }
+
+    .sql-card textarea {
+      width: 100%;
+      height: 180px;
+      font-family: monospace;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+
+    .sql-card pre {
+      background-color: #f4f4f4;
+      padding: 1rem;
+      white-space: pre-wrap;
+      border-radius: 5px;
+      color: black;
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    .sql-card button {
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .sql-card {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-box"><a href="index.html"><img src="logo.jpg" alt="Epic Logo" class="logo"></a></div>
+    <h1>SQLite Query Tester</h1>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="fractal.html">Fractal Canvas</a></li>
+      <li><a href="complex.html">Complex Graphing</a></li>
+      <li><a href="vector.html">Vector Calculator</a></li>
+      <li><a href="sql.html">Web SQL</a></li>
+      <li><a href="api.html">API Tester</a></li>
+      <li><a href="qr.html">QR Code Generator</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+    <div class="card sql-card">
+      <h2>Try Running a SQL Query</h2>
+      <textarea id="query" placeholder="SELECT * FROM students;"></textarea>
+      <br>
+      <button class="btn" onclick="runQuery()">Run Query</button>
+      <pre id="output">Waiting for input...</pre>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Assorted Projects. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let db;
+
+    initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` }).then(SQL => {
+      db = new SQL.Database();
+      db.run(
+        "CREATE TABLE students (id INTEGER, name TEXT, grade INTEGER);" +
+        "INSERT INTO students VALUES (1, 'Alice', 90);" +
+        "INSERT INTO students VALUES (2, 'Bob', 85);" +
+        "INSERT INTO students VALUES (3, 'Charlie', 88);"
+      );
+    });
+
+    function runQuery() {
+      const query = document.getElementById('query').value;
+      const output = document.getElementById('output');
+
+      try {
+        const results = db.exec(query);
+        if (results.length === 0) {
+          output.textContent = "Query executed successfully.";
+          return;
+        }
+
+        let table = "";
+        results.forEach(result => {
+          table += result.columns.join(" | ") + "\n";
+          table += "-".repeat(result.columns.join(" | ").length) + "\n";
+          result.values.forEach(row => {
+            table += row.join(" | ") + "\n";
+          });
+        });
+        output.textContent = table;
+      } catch (err) {
+        output.textContent = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
