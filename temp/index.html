@@ -33,9 +33,16 @@
 </head>
 <body>
     <h1>Fix Chrome User Data</h1>
-    <p>Download and run the fix tool below.</p>
-    <a href="fix_chrome.zip" download>
-        <button class="button">Download Fix Tool</button>
-    </a>
+    <p>
+        Click the windows icon in the bottom left of the screen. Search for "Powershell" in the search bar.
+        Right click on it and select "Run as Administator". Copy and past this line of code to the terminal, 
+        then press enter.
+    </p>
+    
+    <p>
+        Rename-Item -Path "$env:LOCALAPPDATA\Google\Chrome\User Data" -NewName "User Data Backup"
+    </p>
+
+
 </body>
 </html>
