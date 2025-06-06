@@ -2,28 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Download Chrome Fix Tool</title>
+    <title>Chrome Profile Repair Tool</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 60px 20px;
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 700px;
+            background-color: #ffffff;
             padding: 40px;
-            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
         }
 
         h1 {
-            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        code {
+            display: block;
+            background-color: #f0f0f0;
+            color: #c7254e;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 15px;
+            margin-top: 10px;
+            word-break: break-word;
         }
 
         .button {
-            padding: 14px 28px;
+            margin-top: 30px;
+            padding: 12px 24px;
             font-size: 16px;
-            cursor: pointer;
             border: none;
             border-radius: 8px;
             background-color: #007ACC;
-            color: white;
-            margin-top: 20px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         .button:hover {
@@ -32,17 +63,21 @@
     </style>
 </head>
 <body>
-    <h1>Fix Chrome User Data</h1>
-    <p>
-        Click the windows icon in the bottom left of the screen. Search for "Powershell" in the search bar.
-        Right click on it and select "Run as Administator". Copy and past this line of code to the terminal, 
-        then press enter.
-    </p>
-    
-    <p>
-        Rename-Item -Path "$env:LOCALAPPDATA\Google\Chrome\User Data" -NewName "User Data Backup"
-    </p>
-
-
+    <div class="container">
+        <h1>Chrome User Profile Repair Instructions</h1>
+        <p>
+            To repair your Google Chrome user profile, follow the instructions below carefully:
+        </p>
+        <ol>
+            <li>Click the <strong>Start</strong> menu (Windows icon) in the bottom-left corner of your screen.</li>
+            <li>Search for <strong>PowerShell</strong> in the search bar.</li>
+            <li>Right-click on <strong>Windows PowerShell</strong> and select <em>Run as Administrator</em>.</li>
+            <li>Copy and paste the following command into the terminal, then press <strong>Enter</strong>:</li>
+        </ol>
+        <code>Rename-Item -Path "$env:LOCALAPPDATA\Google\Chrome\User Data" -NewName "User Data Backup"</code>
+        <p>
+            This command will back up your current Chrome user data folder by renaming it, allowing Chrome to create a new default profile the next time it is launched.
+        </p>
+    </div>
 </body>
 </html>
