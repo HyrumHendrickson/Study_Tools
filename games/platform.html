@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platformer Game with Camera Tracking</title>
+    <link rel="stylesheet" href="platform_assets/styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <h1 class="logo">ScatteredGames</h1>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="platform.html">Platformer</a></li>
+                <li><a href="space.html">Asteroid</a></li>
+                <li><a href="life.html">Game of Life</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="big-box">
+        <div class="game-container">
+            <div class="game-info">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="lives">Lives: <span id="lives">3</span></div>
+            </div>
+            <div id="game">
+                <!-- Game world and elements will be created by JavaScript -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <p>Controls: Use ← → arrow keys to move, Space to jump</p>
+            <p>Special Abilities: Once collected, press Space twice to double jump, press Shift to dash, press Z to attack with sword</p>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 ScatteredGames. All rights reserved.</p>
+    </footer>
+    <!-- Notice the type="module" attribute which enables ES modules -->
+    <script type="module" src="platform_assets/js/main.js"></script>
+</body>
+</html>
