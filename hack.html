@@ -38,16 +38,16 @@
         http://203.0.113.10/
         https://203.0.113.10:8443/
     -->
-    <p class="muted">Target IP: <code>IP_ADDRESS</code><span id="portLabel"></span></p>
+    <p class="muted">Target IP: <code>50.112.243.171</code><span id="portLabel"></span></p>
 
     <div class="buttons">
       <!-- HTTP link -->
-      <a class="btn" id="httpLink" href="http://IP_ADDRESS/" target="_blank" rel="noopener noreferrer">
+      <a class="btn" id="httpLink" href="http://50.112.243.171/" target="_blank" rel="noopener noreferrer">
         Open via HTTP
       </a>
 
       <!-- HTTPS link (add :PORT if needed) -->
-      <a class="btn" id="httpsLink" href="https://IP_ADDRESS/" target="_blank" rel="noopener noreferrer">
+      <a class="btn" id="httpsLink" href="https://50.112.243.171/" target="_blank" rel="noopener noreferrer">
         Open via HTTPS
       </a>
     </div>
@@ -63,7 +63,7 @@
     const PORT = ""; // e.g. ":8443"
     if (PORT) {
       const https = document.getElementById("httpsLink");
-      https.href = `https://IP_ADDRESS${PORT}/`;
+      https.href = `https://50.112.243.171{PORT}/`;
       const portLabel = document.getElementById("portLabel");
       portLabel.textContent = `  •  Port: ${PORT.replace(":", "")}`;
     }
