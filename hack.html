@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Go to Server by IP</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0; padding: 2rem; line-height: 1.5;
+      display: grid; place-items: center; min-height: 100vh;
+    }
+    .card {
+      max-width: 640px; width: 100%;
+      border: 1px solid rgba(0,0,0,.1); border-radius: 14px;
+      padding: 1.5rem; box-shadow: 0 6px 24px rgba(0,0,0,.08);
+    }
+    h1 { margin: 0 0 .5rem; font-size: 1.4rem; }
+    p { margin: .25rem 0 .75rem; }
+    code { padding: .15rem .35rem; border-radius: 6px; background: rgba(127,127,127,.15); }
+    .buttons { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .75rem; }
+    .btn {
+      display: inline-block; padding: .65rem 1rem; border-radius: 10px;
+      border: 1px solid rgba(0,0,0,.12); text-decoration: none; font-weight: 600;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .muted { opacity: .8; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Connect to Server</h1>
+
+    <!--
+      Replace IP_ADDRESS and (optionally) PORT below.
+      Examples:
+        http://203.0.113.10/
+        https://203.0.113.10:8443/
+    -->
+    <p class="muted">Target IP: <code>IP_ADDRESS</code><span id="portLabel"></span></p>
+
+    <div class="buttons">
+      <!-- HTTP link -->
+      <a class="btn" id="httpLink" href="http://IP_ADDRESS/" target="_blank" rel="noopener noreferrer">
+        Open via HTTP
+      </a>
+
+      <!-- HTTPS link (add :PORT if needed) -->
+      <a class="btn" id="httpsLink" href="https://IP_ADDRESS/" target="_blank" rel="noopener noreferrer">
+        Open via HTTPS
+      </a>
+    </div>
+
+    <p class="muted">
+      Note: If the server uses HTTPS with a certificate for a domain (not the IP), browsers may warn when visiting by IP.
+    </p>
+  </main>
+
+  <!-- Optional: set PORT once here to automatically reflect in the HTTPS link and label -->
+  <script>
+    // Set this to "" (empty string) for default port, or e.g. ":8443"
+    const PORT = ""; // e.g. ":8443"
+    if (PORT) {
+      const https = document.getElementById("httpsLink");
+      https.href = `https://IP_ADDRESS${PORT}/`;
+      const portLabel = document.getElementById("portLabel");
+      portLabel.textContent = `  •  Port: ${PORT.replace(":", "")}`;
+    }
+  </script>
+</body>
+</html>
