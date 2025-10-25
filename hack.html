@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Go to Server by IP</title>
+  <title>Redirecting to Server</title>
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -15,41 +15,36 @@
       max-width: 640px; width: 100%;
       border: 1px solid rgba(0,0,0,.1); border-radius: 14px;
       padding: 1.5rem; box-shadow: 0 6px 24px rgba(0,0,0,.08);
+      text-align: center;
     }
     h1 { margin: 0 0 .5rem; font-size: 1.4rem; }
     p { margin: .25rem 0 .75rem; }
     code { padding: .15rem .35rem; border-radius: 6px; background: rgba(127,127,127,.15); }
-    .buttons { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .75rem; }
+    .buttons { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; margin-top: .75rem; }
     .btn {
       display: inline-block; padding: .65rem 1rem; border-radius: 10px;
       border: 1px solid rgba(0,0,0,.12); text-decoration: none; font-weight: 600;
     }
     .btn:hover { transform: translateY(-1px); }
     .muted { opacity: .8; font-size: .95rem; }
+    #countdown { font-weight: 600; }
   </style>
 </head>
 <body>
   <main class="card" role="main" aria-labelledby="title">
-    <h1 id="title">Connect to Server</h1>
+    <h1 id="title">Connecting to Server...</h1>
 
-    <!--
-      Replace IP_ADDRESS and (optionally) PORT below.
-      Examples:
-        http://203.0.113.10/
-        https://203.0.113.10:8443/
-    -->
-    <p class="muted">Target IP: <code>50.112.243.171</code><span id="portLabel"></span></p>
+    <p class="muted">
+      Target IP: <code id="ipDisplay">50.112.243.171</code><span id="portLabel"></span>
+    </p>
+
+    <p class="muted">
+      Redirecting automatically in <span id="countdown">3</span> seconds.
+    </p>
 
     <div class="buttons">
-      <!-- HTTP link -->
-      <a class="btn" id="httpLink" href="http://50.112.243.171/" target="_blank" rel="noopener noreferrer">
-        Open via HTTP
-      </a>
-
-      <!-- HTTPS link (add :PORT if needed) -->
-      <a class="btn" id="httpsLink" href="https://50.112.243.171/" target="_blank" rel="noopener noreferrer">
-        Open via HTTPS
-      </a>
+      <a class="btn" id="httpLink" href="#" target="_blank" rel="noopener noreferrer">Open via HTTP</a>
+      <a class="btn" id="httpsLink" href="#" target="_blank" rel="noopener noreferrer">Open via HTTPS</a>
     </div>
 
     <p class="muted">
@@ -57,16 +52,36 @@
     </p>
   </main>
 
-  <!-- Optional: set PORT once here to automatically reflect in the HTTPS link and label -->
   <script>
-    // Set this to "" (empty string) for default port, or e.g. ":8443"
+    // === Configuration ===
+    const IP = "50.112.243.171";
     const PORT = ""; // e.g. ":8443"
-    if (PORT) {
-      const https = document.getElementById("httpsLink");
-      https.href = `https://50.112.243.171{PORT}/`;
-      const portLabel = document.getElementById("portLabel");
-      portLabel.textContent = `  •  Port: ${PORT.replace(":", "")}`;
-    }
+    const USE_HTTPS = true; // true = redirect via HTTPS, false = HTTP
+    const REDIRECT_DELAY = 3; // seconds
+
+    // === Setup Links ===
+    const httpLink = document.getElementById("httpLink");
+    const httpsLink = document.getElementById("httpsLink");
+    const portLabel = document.getElementById("portLabel");
+
+    httpLink.href = `http://${IP}/`;
+    httpsLink.href = `https://${IP}${PORT}/`;
+
+    if (PORT) portLabel.textContent = `  •  Port: ${PORT.replace(":", "")}`;
+
+    // === Countdown and Redirect ===
+    let seconds = REDIRECT_DELAY;
+    const countdown = document.getElementById("countdown");
+
+    const interval = setInterval(() => {
+      seconds--;
+      countdown.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        const target = USE_HTTPS ? httpsLink.href : httpLink.href;
+        window.location.href = target;
+      }
+    }, 1000);
   </script>
 </body>
 </html>
